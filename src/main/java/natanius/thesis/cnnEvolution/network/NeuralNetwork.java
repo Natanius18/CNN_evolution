@@ -112,4 +112,16 @@ public class NeuralNetwork {
         System.out.print("\r" + "Training progress: \u001B[1m" + progressBarColor + progressBar + "\u001B[0m\u001B[1m " + formattedProgress + "%\u001B[0m");
     }
 
+    public double[] guessInRealTime(double[] inputs) {
+        double[][] inputMatrix = new double[28][28];
+
+        for (int i = 0; i < 28; i++) {
+            System.arraycopy(inputs, i * 28, inputMatrix[i], 0, 28);
+        }
+        List<double[][]> inList = new ArrayList<>();
+        inList.add(multiply(inputMatrix, (1.0 / 255)));
+        return layers.getFirst().getOutput(inList);
+    }
+
+
 }

@@ -10,6 +10,7 @@ import natanius.thesis.cnnEvolution.data.DataReader;
 import natanius.thesis.cnnEvolution.data.Image;
 import natanius.thesis.cnnEvolution.network.NetworkBuilder;
 import natanius.thesis.cnnEvolution.network.NeuralNetwork;
+import natanius.thesis.cnnEvolution.visualization.FormDigits;
 
 public class Main {
 
@@ -21,6 +22,7 @@ public class Main {
 
         List<Image> imagesTest = new DataReader().readData("data/mnist_test.csv");
         List<Image> imagesTrain = new DataReader().readData("data/mnist_train.csv");
+//        imagesTrain = imagesTrain.stream().filter(image -> image.label() == 0).collect(Collectors.toList());
 
         System.out.println("Images Train size: " + imagesTrain.size());
         System.out.println("Images Test size: " + imagesTest.size());
@@ -48,5 +50,8 @@ public class Main {
             long seconds = totalSeconds - mins * 60;
             System.out.printf("Time: %d:%d%n", mins, seconds);
         }
+
+        FormDigits f = new FormDigits(net);
+        new Thread(f).start();
     }
 }
