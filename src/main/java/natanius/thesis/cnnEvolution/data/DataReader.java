@@ -1,50 +1,34 @@
 package natanius.thesis.cnnEvolution.data;
 
 import static java.lang.Integer.parseInt;
+import static java.util.stream.Collectors.toList;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class DataReader {
-
-    private final int rows = 28;
-    private final int cols = 28;
-
-    public List<Image> readData(String path){
-
-        List<Image> images = new ArrayList<>();
-
-        try (BufferedReader dataReader = new BufferedReader(new FileReader(path))){
-
-            String line;
-
-            while((line = dataReader.readLine()) != null){
-                String[] lineItems = line.split(",");
-
-                double[][] data = new double[rows][cols];
-                int label = parseInt(lineItems[0]);
-
-                int i = 1;
-
-                for(int row = 0; row < rows; row++){
-                    for(int col = 0; col < cols; col++){
-                        data[row][col] = parseInt(lineItems[i]);
-                        i++;
-                    }
-                }
-
-                images.add(new Image(data, label));
-
-            }
-
-        } catch (Exception e){
-            throw new IllegalArgumentException("File not found " + path);
+    public List<Image> readData(String path) {
+        try (Stream<String> lines = Files.lines(Paths.get(path))) {
+            return lines.parallel()
+                .map(this::parseLine)
+                .collect(toList());
+        } catch (Exception e) {
+            throw new RuntimeException("File not found " + path, e);
         }
-
-        return images;
-
     }
 
+    private Image parseLine(String line) {
+        String[] items = line.split(",");
+        int label = parseInt(items[0]);
+        double[][] data = new double[28][28];
+
+        IntStream.range(1, items.length)
+            .parallel()
+            .forEach(i -> data[(i - 1) / 28][(i - 1) % 28] = parseInt(items[i]));
+
+        return new Image(data, label);
+    }
 }

@@ -27,10 +27,10 @@ public class Main {
         System.out.println("Images Train size: " + imagesTrain.size());
         System.out.println("Images Test size: " + imagesTest.size());
 
-        NetworkBuilder builder = new NetworkBuilder(28, 28, 25600);
-        builder.addConvolutionLayer(8, 5, 1, 0.1, SEED);
-        builder.addMaxPoolLayer(3, 2);
-        builder.addFullyConnectedLayer(10, 0.1, SEED);
+        NetworkBuilder builder = new NetworkBuilder(28, 28, 25600)
+            .addConvolutionLayer(8, 5, 1, 0.2, SEED)
+            .addMaxPoolLayer(3, 2)
+            .addFullyConnectedLayer(10, 0.5, SEED);
 
         NeuralNetwork net = builder.build();
         System.out.println(net);

@@ -20,32 +20,34 @@ public class NetworkBuilder {
         this.scaleFactor = scaleFactor;
     }
 
-    public void addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, long SEED) {
+    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, long SEED) {
         if (layers.isEmpty()) {
             layers.add(new ConvolutionLayer(filterSize, stepSize, 1, inputRows, inputCols, SEED, numFilters, learningRate));
         } else {
             Layer prev = layers.getLast();
             layers.add(new ConvolutionLayer(filterSize, stepSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols(), SEED, numFilters, learningRate));
         }
+        return this;
     }
 
-    public void addMaxPoolLayer(int windowSize, int stepSize) {
+    public NetworkBuilder addMaxPoolLayer(int windowSize, int stepSize) {
         if (layers.isEmpty()) {
             layers.add(new MaxPoolLayer(stepSize, windowSize, 1, inputRows, inputCols));
         } else {
             Layer prev = layers.getLast();
             layers.add(new MaxPoolLayer(stepSize, windowSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols()));
         }
+        return this;
     }
 
-    public void addFullyConnectedLayer(int outLength, double learningRate, long SEED) {
+    public NetworkBuilder addFullyConnectedLayer(int outLength, double learningRate, long SEED) {
         if (layers.isEmpty()) {
             layers.add(new FullyConnectedLayer(inputCols * inputRows, outLength, SEED, learningRate));
         } else {
             Layer prev = layers.getLast();
             layers.add(new FullyConnectedLayer(prev.getOutputElements(), outLength, SEED, learningRate));
         }
-
+        return this;
     }
 
     public NeuralNetwork build() {

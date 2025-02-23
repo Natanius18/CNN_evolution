@@ -15,12 +15,12 @@ public class NeuralNetwork {
     private final List<Layer> layers;
     private final int scaleFactor;
 
-    public static final String RESET = "\u001B[0m";
-    public static final String CYAN = "\u001B[36m";  // Titles
-    public static final String GREEN = "\u001B[32m"; // Convolution
-    public static final String BLUE = "\u001B[34m";  // Max Pooling
-    public static final String MAGENTA = "\u001B[35m"; // Fully Connected
-    public static final String YELLOW = "\u001B[33m"; // Stats
+    private static final String RESET = "\u001B[0m";
+    private static final String CYAN = "\u001B[36m";  // Titles
+    private static final String GREEN = "\u001B[32m"; // Convolution
+    private static final String BLUE = "\u001B[34m";  // Max Pooling
+    private static final String MAGENTA = "\u001B[35m"; // Fully Connected
+    private static final String YELLOW = "\u001B[33m"; // Stats
 
 
     public NeuralNetwork(List<Layer> layers, int scaleFactor) {
@@ -83,22 +83,25 @@ public class NeuralNetwork {
     public float test(List<Image> images) {
         int correct = 0;
 
-        for (Image img : images) {
+        int size = images.size();
+        for (int i = 0; i < size; i++) {
+            printProgress(i, size, "Testing");
+            Image img = images.get(i);
             int guess = guess(img);
 
             if (guess == img.label()) {
                 correct++;
             }
         }
-
-        return ((float) correct / images.size());
+        System.out.println();
+        return ((float) correct / size);
     }
 
     public void train(List<Image> images) {
         int totalImages = images.size();
 
         for (int i = 0; i < totalImages; i++) {
-            printProgress(i, totalImages);
+            printProgress(i, totalImages, "Training");
 
             Image img = images.get(i);
             List<double[][]> inList = new ArrayList<>();
@@ -112,14 +115,14 @@ public class NeuralNetwork {
         System.out.println();
     }
 
-    private static void printProgress(int i, int totalImages) {
+    private static void printProgress(int i, int totalImages, String processName) {
         double progress = (i + 1) * 100. / totalImages;
         String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
 
         String progressBarColor = progress < 50 ? "\u001B[31m" : (progress < 80 ? "\u001B[33m" : "\u001B[32m");
 
         String formattedProgress = String.format("%.2f", progress);
-        System.out.print("\r" + "Training progress: \u001B[1m" + progressBarColor + progressBar + "\u001B[0m\u001B[1m " + formattedProgress + "%\u001B[0m");
+        System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + "\u001B[0m\u001B[1m " + formattedProgress + "%\u001B[0m");
     }
 
     public double[] guessInRealTime(double[] inputs) {
