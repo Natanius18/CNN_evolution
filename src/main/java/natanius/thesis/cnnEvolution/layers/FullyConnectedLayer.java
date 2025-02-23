@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class FullyConnectedLayer extends Layer{
 
-    private long SEED;
+    private final long SEED;
     private final double leak = 0.01;
 
     private final double[][] weights;
@@ -128,6 +128,19 @@ public class FullyConnectedLayer extends Layer{
     public int getOutputElements() {
         return outLength;
     }
+
+    @Override
+    public int getParameterCount() {
+        return inLength * outLength;  // Weight matrix size
+    }
+
+    @Override
+    public String toString() {
+        return String.format("🔗 FULLY CONNECTED | Inputs: %d → Outputs: %d | Parameters: %d",
+            inLength, outLength, getParameterCount());
+    }
+
+
 
     public void setRandomWeights(){
         Random random = new Random(SEED);

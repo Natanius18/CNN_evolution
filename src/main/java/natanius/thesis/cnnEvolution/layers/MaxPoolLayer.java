@@ -135,4 +135,16 @@ public class MaxPoolLayer extends Layer {
     public int getOutputElements() {
         return inLength * getOutputCols() * getOutputRows();
     }
+
+    @Override
+    public int getParameterCount() {
+        return 0;  // No trainable parameters in pooling layers
+    }
+
+    @Override
+    public String toString() {
+        return String.format("🔄 MAX POOL | Window: %dx%d | Stride: %d",
+            windowSize, windowSize, stepSize);
+    }
+
 }

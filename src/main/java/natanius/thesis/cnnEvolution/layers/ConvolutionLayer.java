@@ -10,7 +10,7 @@ import java.util.Random;
 public class ConvolutionLayer extends Layer {
 
     private final int filterSize;
-    private final int stepsize;
+    private final int stepSize;
     private final int inLength;
     private final int inRows;
     private final int inCols;
@@ -19,9 +19,9 @@ public class ConvolutionLayer extends Layer {
     private List<double[][]> filters;
     private List<double[][]> lastInput;
 
-    public ConvolutionLayer(int filterSize, int stepsize, int inLength, int inRows, int inCols, long SEED, int numFilters, double learningRate) {
+    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, long SEED, int numFilters, double learningRate) {
         this.filterSize = filterSize;
-        this.stepsize = stepsize;
+        this.stepSize = stepSize;
         this.inLength = inLength;
         this.inRows = inRows;
         this.inCols = inCols;
@@ -62,7 +62,7 @@ public class ConvolutionLayer extends Layer {
 
         for (double[][] doubles : list) {
             for (double[][] filter : filters) {
-                output.add(convolve(doubles, filter, stepsize));
+                output.add(convolve(doubles, filter, stepSize));
             }
 
         }
@@ -120,18 +120,18 @@ public class ConvolutionLayer extends Layer {
 
     public double[][] spaceArray(double[][] input) {
 
-        if (stepsize == 1) {
+        if (stepSize == 1) {
             return input;
         }
 
-        int outRows = (input.length - 1) * stepsize + 1;
-        int outCols = (input[0].length - 1) * stepsize + 1;
+        int outRows = (input.length - 1) * stepSize + 1;
+        int outCols = (input[0].length - 1) * stepSize + 1;
 
         double[][] output = new double[outRows][outCols];
 
         for (int i = 0; i < input.length; i++) {
             for (int j = 0; j < input[0].length; j++) {
-                output[i * stepsize][j * stepsize] = input[i][j];
+                output[i * stepSize][j * stepSize] = input[i][j];
             }
         }
 
@@ -289,16 +289,28 @@ public class ConvolutionLayer extends Layer {
 
     @Override
     public int getOutputRows() {
-        return (inRows - filterSize) / stepsize + 1;
+        return (inRows - filterSize) / stepSize + 1;
     }
 
     @Override
     public int getOutputCols() {
-        return (inCols - filterSize) / stepsize + 1;
+        return (inCols - filterSize) / stepSize + 1;
     }
 
     @Override
     public int getOutputElements() {
         return getOutputCols() * getOutputRows() * getOutputLength();
     }
+
+    @Override
+    public int getParameterCount() {
+        return filters.size() * filterSize * filterSize;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("🌀 CONVOLUTION | %d filters | %dx%d kernel | Stride: %d | Parameters: %d",
+            filters.size(), filterSize, filterSize, stepSize, getParameterCount());
+    }
+
 }

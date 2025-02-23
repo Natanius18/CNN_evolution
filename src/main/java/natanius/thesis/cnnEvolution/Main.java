@@ -33,6 +33,7 @@ public class Main {
         builder.addFullyConnectedLayer(10, 0.1, SEED);
 
         NeuralNetwork net = builder.build();
+        System.out.println(net);
 
         float rate = net.test(imagesTest);
         System.out.println("Pre training success rate: " + rate);

@@ -3,15 +3,25 @@ package natanius.thesis.cnnEvolution.network;
 import static natanius.thesis.cnnEvolution.data.MatrixUtility.add;
 import static natanius.thesis.cnnEvolution.data.MatrixUtility.multiply;
 
-import natanius.thesis.cnnEvolution.data.Image;
-import natanius.thesis.cnnEvolution.layers.Layer;
 import java.util.ArrayList;
 import java.util.List;
+import natanius.thesis.cnnEvolution.data.Image;
+import natanius.thesis.cnnEvolution.layers.ConvolutionLayer;
+import natanius.thesis.cnnEvolution.layers.FullyConnectedLayer;
+import natanius.thesis.cnnEvolution.layers.Layer;
+import natanius.thesis.cnnEvolution.layers.MaxPoolLayer;
 
 public class NeuralNetwork {
-
     private final List<Layer> layers;
     private final int scaleFactor;
+
+    public static final String RESET = "\u001B[0m";
+    public static final String CYAN = "\u001B[36m";  // Titles
+    public static final String GREEN = "\u001B[32m"; // Convolution
+    public static final String BLUE = "\u001B[34m";  // Max Pooling
+    public static final String MAGENTA = "\u001B[35m"; // Fully Connected
+    public static final String YELLOW = "\u001B[33m"; // Stats
+
 
     public NeuralNetwork(List<Layer> layers, int scaleFactor) {
         this.layers = layers;
@@ -121,6 +131,46 @@ public class NeuralNetwork {
         List<double[][]> inList = new ArrayList<>();
         inList.add(multiply(inputMatrix, (1.0 / 255)));
         return layers.getFirst().getOutput(inList);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(CYAN).append("\n╔════════════════════════════════════════════════════════════════════════╗\n");
+        sb.append("║ ").append(centerText("🧠 NEURAL NETWORK ARCHITECTURE 🧠", 70)).append(" ║\n");
+        sb.append("╠════════════════════════════════════════════════════════════════════════╣\n").append(RESET);
+
+        int totalParams = 0;
+
+        for (int i = 0; i < layers.size(); i++) {
+            Layer layer = layers.get(i);
+            totalParams += layer.getParameterCount();
+
+            String color = (layer instanceof ConvolutionLayer) ? GREEN :
+                (layer instanceof MaxPoolLayer) ? BLUE :
+                    (layer instanceof FullyConnectedLayer) ? MAGENTA : RESET;
+
+            sb.append(color).append("║ ").append(centerText(layer.toString(), 70)).append(" ║\n").append(RESET);
+
+            if (i < layers.size() - 1) {
+                sb.append("║                                  ▼                                     ║\n");
+            }
+        }
+
+        sb.append("╚════════════════════════════════════════════════════════════════════════╝\n");
+        sb.append(YELLOW).append("📊 Total Layers: ").append(layers.size())
+            .append(" | Total Parameters: ").append(totalParams).append(RESET).append("\n");
+
+        return sb.toString();
+    }
+
+    private String centerText(String text, int width) {
+        int padding = Math.max(0, (width - text.length()));
+        int leftPadding = padding / 2;
+        int rightPadding = padding - leftPadding;
+
+        return " ".repeat(leftPadding) + text + " ".repeat(rightPadding);
     }
 
 
