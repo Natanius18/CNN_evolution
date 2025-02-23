@@ -1,4 +1,4 @@
-package layers;
+package natanius.thesis.cnnEvolution.layers;
 
 import java.util.List;
 import java.util.Random;
@@ -8,22 +8,22 @@ public class FullyConnectedLayer extends Layer{
     private long SEED;
     private final double leak = 0.01;
 
-    private double[][] _weights;
-    private int _inLength;
-    private int _outLength;
-    private double _learningRate;
+    private final double[][] weights;
+    private final int inLength;
+    private final int outLength;
+    private final double learningRate;
 
     private double[] lastZ;
     private double[] lastX;
 
 
-    public FullyConnectedLayer(int _inLength, int _outLength, long SEED, double learningRate) {
-        this._inLength = _inLength;
-        this._outLength = _outLength;
+    public FullyConnectedLayer(int inLength, int outLength, long SEED, double learningRate) {
+        this.inLength = inLength;
+        this.outLength = outLength;
         this.SEED = SEED;
-        this._learningRate = learningRate;
+        this.learningRate = learningRate;
 
-        _weights = new double[_inLength][_outLength];
+        weights = new double[inLength][outLength];
         setRandomWeights();
     }
 
@@ -31,19 +31,19 @@ public class FullyConnectedLayer extends Layer{
 
         lastX = input;
 
-        double[] z = new double[_outLength];
-        double[] out = new double[_outLength];
+        double[] z = new double[outLength];
+        double[] out = new double[outLength];
 
-        for(int i = 0; i < _inLength; i++){
-            for(int j = 0; j < _outLength; j++){
-                z[j] += input[i]*_weights[i][j];
+        for (int i = 0; i < inLength; i++) {
+            for (int j = 0; j < outLength; j++) {
+                z[j] += input[i] * weights[i][j];
             }
         }
 
         lastZ = z;
 
-        for(int i = 0; i < _inLength; i++){
-            for(int j = 0; j < _outLength; j++){
+        for (int i = 0; i < inLength; i++) {
+            for (int j = 0; j < outLength; j++) {
                 out[j] = reLu(z[j]);
             }
         }
@@ -61,8 +61,8 @@ public class FullyConnectedLayer extends Layer{
     public double[] getOutput(double[] input) {
         double[] forwardPass = fullyConnectedForwardPass(input);
 
-        if(_nextLayer != null){
-            return _nextLayer.getOutput(forwardPass);
+        if (nextLayer != null) {
+            return nextLayer.getOutput(forwardPass);
         } else {
             return forwardPass;
         }
@@ -71,35 +71,35 @@ public class FullyConnectedLayer extends Layer{
     @Override
     public void backPropagation(double[] dLdO) {
 
-        double[] dLdX = new double[_inLength];
+        double[] dLdX = new double[inLength];
 
         double dOdz;
         double dzdw;
         double dLdw;
         double dzdx;
 
-        for(int k = 0; k < _inLength; k++){
+        for (int k = 0; k < inLength; k++) {
 
-            double dLdX_sum = 0;
+            double dLdXsum = 0;
 
-            for(int j = 0; j < _outLength; j++){
+            for (int j = 0; j < outLength; j++) {
 
                 dOdz = derivativeReLu(lastZ[j]);
                 dzdw = lastX[k];
-                dzdx = _weights[k][j];
+                dzdx = weights[k][j];
 
                 dLdw = dLdO[j]*dOdz*dzdw;
 
-                _weights[k][j] -= dLdw*_learningRate;
+                weights[k][j] -= dLdw * learningRate;
 
-                dLdX_sum += dLdO[j]*dOdz*dzdx;
+                dLdXsum += dLdO[j] * dOdz * dzdx;
             }
 
-            dLdX[k] = dLdX_sum;
+            dLdX[k] = dLdXsum;
         }
 
-        if(_previousLayer!= null){
-            _previousLayer.backPropagation(dLdX);
+        if (previousLayer != null) {
+            previousLayer.backPropagation(dLdX);
         }
     }
 
@@ -126,33 +126,25 @@ public class FullyConnectedLayer extends Layer{
 
     @Override
     public int getOutputElements() {
-        return _outLength;
+        return outLength;
     }
 
     public void setRandomWeights(){
         Random random = new Random(SEED);
 
-        for(int i = 0; i < _inLength; i++){
-            for(int j =0; j < _outLength; j++){
-                _weights[i][j] = random.nextGaussian();
+        for (int i = 0; i < inLength; i++) {
+            for (int j = 0; j < outLength; j++) {
+                weights[i][j] = random.nextGaussian();
             }
         }
     }
 
     public double reLu(double input){
-        if(input <= 0){
-            return 0;
-        } else {
-            return input;
-        }
+        return input <= 0 ? 0 : input;
     }
 
     public double derivativeReLu(double input){
-        if(input <= 0){
-            return leak;
-        } else {
-            return 1;
-        }
+        return input <= 0 ? leak : 1;
     }
 
 }

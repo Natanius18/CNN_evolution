@@ -1,11 +1,15 @@
-import data.DataReader;
-import data.Image;
-import network.NetworkBuilder;
-import network.NeuralNetwork;
+package natanius.thesis.cnnEvolution;
 
-import java.util.List;
-
+import static java.lang.Math.floorDiv;
+import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
+
+import java.time.Instant;
+import java.util.List;
+import natanius.thesis.cnnEvolution.data.DataReader;
+import natanius.thesis.cnnEvolution.data.Image;
+import natanius.thesis.cnnEvolution.network.NetworkBuilder;
+import natanius.thesis.cnnEvolution.network.NeuralNetwork;
 
 public class Main {
 
@@ -21,9 +25,9 @@ public class Main {
         System.out.println("Images Train size: " + imagesTrain.size());
         System.out.println("Images Test size: " + imagesTest.size());
 
-        NetworkBuilder builder = new NetworkBuilder(28,28,256*100);
+        NetworkBuilder builder = new NetworkBuilder(28, 28, 25600);
         builder.addConvolutionLayer(8, 5, 1, 0.1, SEED);
-        builder.addMaxPoolLayer(3,2);
+        builder.addMaxPoolLayer(3, 2);
         builder.addFullyConnectedLayer(10, 0.1, SEED);
 
         NeuralNetwork net = builder.build();
@@ -31,13 +35,18 @@ public class Main {
         float rate = net.test(imagesTest);
         System.out.println("Pre training success rate: " + rate);
 
-        int epochs = 3;
+        int epochs = 1;
 
-        for(int i = 0; i < epochs; i++){
+        for (int i = 0; i < epochs; i++) {
+            Instant start = now();
             shuffle(imagesTrain);
             net.train(imagesTrain);
             rate = net.test(imagesTest);
             System.out.println("Success rate after round " + i + ": " + rate);
+            long totalSeconds = now().getEpochSecond() - start.getEpochSecond();
+            long mins = floorDiv(totalSeconds, 60);
+            long seconds = totalSeconds - mins * 60;
+            System.out.printf("Time: %d:%d%n", mins, seconds);
         }
     }
 }
