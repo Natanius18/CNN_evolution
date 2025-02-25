@@ -1,11 +1,12 @@
-package natanius.thesis.cnnEvolution.layers;
+package natanius.thesis.cnn.evolution.layers;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class MaxPoolLayer extends Layer {
+public class MaxPoolLayer extends Layer implements Serializable {
 
     private final int stepSize;
     private final int windowSize;

@@ -1,4 +1,4 @@
-package natanius.thesis.cnnEvolution.data;
+package natanius.thesis.cnn.evolution.data;
 
 import lombok.experimental.UtilityClass;
 

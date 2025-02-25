@@ -1,4 +1,4 @@
-package natanius.thesis.cnnEvolution.visualization;
+package natanius.thesis.cnn.evolution.visualization;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -13,7 +13,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import natanius.thesis.cnnEvolution.network.NeuralNetwork;
+import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class FormDigits extends JFrame implements Runnable, MouseListener, MouseMotionListener, KeyListener {
 

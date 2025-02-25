@@ -1,4 +1,4 @@
-package natanius.thesis.cnnEvolution.layers;
+package natanius.thesis.cnn.evolution.layers;
 
 import java.util.ArrayList;
 import java.util.List;

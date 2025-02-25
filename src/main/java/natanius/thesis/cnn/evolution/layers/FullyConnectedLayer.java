@@ -1,11 +1,12 @@
-package natanius.thesis.cnnEvolution.layers;
+package natanius.thesis.cnn.evolution.layers;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Random;
 
-public class FullyConnectedLayer extends Layer{
+public class FullyConnectedLayer extends Layer implements Serializable {
 
-    private final long SEED;
+    private final long seed;
     private final double leak = 0.01;
 
     private final double[][] weights;
@@ -17,10 +18,10 @@ public class FullyConnectedLayer extends Layer{
     private double[] lastX;
 
 
-    public FullyConnectedLayer(int inLength, int outLength, long SEED, double learningRate) {
+    public FullyConnectedLayer(int inLength, int outLength, long seed, double learningRate) {
         this.inLength = inLength;
         this.outLength = outLength;
-        this.SEED = SEED;
+        this.seed = seed;
         this.learningRate = learningRate;
 
         weights = new double[inLength][outLength];
@@ -143,7 +144,7 @@ public class FullyConnectedLayer extends Layer{
 
 
     public void setRandomWeights(){
-        Random random = new Random(SEED);
+        Random random = new Random(seed);
 
         for (int i = 0; i < inLength; i++) {
             for (int j = 0; j < outLength; j++) {

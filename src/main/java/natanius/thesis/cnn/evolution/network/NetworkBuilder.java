@@ -1,11 +1,11 @@
-package natanius.thesis.cnnEvolution.network;
+package natanius.thesis.cnn.evolution.network;
 
-import natanius.thesis.cnnEvolution.layers.ConvolutionLayer;
-import natanius.thesis.cnnEvolution.layers.FullyConnectedLayer;
-import natanius.thesis.cnnEvolution.layers.Layer;
-import natanius.thesis.cnnEvolution.layers.MaxPoolLayer;
 import java.util.ArrayList;
 import java.util.List;
+import natanius.thesis.cnn.evolution.layers.ConvolutionLayer;
+import natanius.thesis.cnn.evolution.layers.FullyConnectedLayer;
+import natanius.thesis.cnn.evolution.layers.Layer;
+import natanius.thesis.cnn.evolution.layers.MaxPoolLayer;
 
 public class NetworkBuilder {
 
@@ -20,12 +20,12 @@ public class NetworkBuilder {
         this.scaleFactor = scaleFactor;
     }
 
-    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, long SEED) {
+    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, long seed) {
         if (layers.isEmpty()) {
-            layers.add(new ConvolutionLayer(filterSize, stepSize, 1, inputRows, inputCols, SEED, numFilters, learningRate));
+            layers.add(new ConvolutionLayer(filterSize, stepSize, 1, inputRows, inputCols, seed, numFilters, learningRate));
         } else {
             Layer prev = layers.getLast();
-            layers.add(new ConvolutionLayer(filterSize, stepSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols(), SEED, numFilters, learningRate));
+            layers.add(new ConvolutionLayer(filterSize, stepSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols(), seed, numFilters, learningRate));
         }
         return this;
     }
@@ -40,12 +40,12 @@ public class NetworkBuilder {
         return this;
     }
 
-    public NetworkBuilder addFullyConnectedLayer(int outLength, double learningRate, long SEED) {
+    public NetworkBuilder addFullyConnectedLayer(int outLength, double learningRate, long seed) {
         if (layers.isEmpty()) {
-            layers.add(new FullyConnectedLayer(inputCols * inputRows, outLength, SEED, learningRate));
+            layers.add(new FullyConnectedLayer(inputCols * inputRows, outLength, seed, learningRate));
         } else {
             Layer prev = layers.getLast();
-            layers.add(new FullyConnectedLayer(prev.getOutputElements(), outLength, SEED, learningRate));
+            layers.add(new FullyConnectedLayer(prev.getOutputElements(), outLength, seed, learningRate));
         }
         return this;
     }

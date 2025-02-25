@@ -1,4 +1,4 @@
-package natanius.thesis.cnnEvolution.data;
+package natanius.thesis.cnn.evolution.data;
 
 public record Image(double[][] data, int label) {
 

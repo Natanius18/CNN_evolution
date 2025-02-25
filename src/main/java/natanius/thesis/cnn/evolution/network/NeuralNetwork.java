@@ -1,17 +1,20 @@
-package natanius.thesis.cnnEvolution.network;
+package natanius.thesis.cnn.evolution.network;
 
-import static natanius.thesis.cnnEvolution.data.MatrixUtility.add;
-import static natanius.thesis.cnnEvolution.data.MatrixUtility.multiply;
+import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
+import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import natanius.thesis.cnnEvolution.data.Image;
-import natanius.thesis.cnnEvolution.layers.ConvolutionLayer;
-import natanius.thesis.cnnEvolution.layers.FullyConnectedLayer;
-import natanius.thesis.cnnEvolution.layers.Layer;
-import natanius.thesis.cnnEvolution.layers.MaxPoolLayer;
+import lombok.Getter;
+import natanius.thesis.cnn.evolution.data.Image;
+import natanius.thesis.cnn.evolution.layers.ConvolutionLayer;
+import natanius.thesis.cnn.evolution.layers.FullyConnectedLayer;
+import natanius.thesis.cnn.evolution.layers.Layer;
+import natanius.thesis.cnn.evolution.layers.MaxPoolLayer;
 
-public class NeuralNetwork {
+public class NeuralNetwork implements Serializable {
+    @Getter
     private final List<Layer> layers;
     private final int scaleFactor;
 
@@ -29,7 +32,7 @@ public class NeuralNetwork {
         linkLayers();
     }
 
-    private void linkLayers() {
+    public void linkLayers() {
 
         if (layers.size() <= 1) {
             return;

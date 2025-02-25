@@ -1,13 +1,14 @@
-package natanius.thesis.cnnEvolution.layers;
+package natanius.thesis.cnn.evolution.layers;
 
-import static natanius.thesis.cnnEvolution.data.MatrixUtility.add;
-import static natanius.thesis.cnnEvolution.data.MatrixUtility.multiply;
+import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
+import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class ConvolutionLayer extends Layer {
+public class ConvolutionLayer extends Layer implements Serializable {
 
     private final int filterSize;
     private final int stepSize;
@@ -15,17 +16,17 @@ public class ConvolutionLayer extends Layer {
     private final int inRows;
     private final int inCols;
     private final double learningRate;
-    private long SEED;
+    private final long seed;
     private List<double[][]> filters;
     private List<double[][]> lastInput;
 
-    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, long SEED, int numFilters, double learningRate) {
+    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, long seed, int numFilters, double learningRate) {
         this.filterSize = filterSize;
         this.stepSize = stepSize;
         this.inLength = inLength;
         this.inRows = inRows;
         this.inCols = inCols;
-        this.SEED = SEED;
+        this.seed = seed;
         this.learningRate = learningRate;
 
         generateRandomFilters(numFilters);
@@ -34,7 +35,7 @@ public class ConvolutionLayer extends Layer {
 
     private void generateRandomFilters(int numFilters) {
         List<double[][]> filters = new ArrayList<>();
-        Random random = new Random(SEED);
+        Random random = new Random(seed);
 
         for (int n = 0; n < numFilters; n++) {
             double[][] newFilter = new double[filterSize][filterSize];
