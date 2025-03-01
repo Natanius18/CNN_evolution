@@ -19,6 +19,7 @@ public class NeuralNetwork implements Serializable {
     private final int scaleFactor;
 
     private static final String RESET = "\u001B[0m";
+    private static final String RED = "\u001B[31m";
     private static final String CYAN = "\u001B[36m";  // Titles
     private static final String GREEN = "\u001B[32m"; // Convolution
     private static final String BLUE = "\u001B[34m";  // Max Pooling
@@ -100,32 +101,59 @@ public class NeuralNetwork implements Serializable {
         return ((float) correct / size);
     }
 
-    public void train(List<Image> images) {
+    public void train(List<Image> images, int batchSize) {
         int totalImages = images.size();
+        int numBatches = (int) Math.ceil((double) totalImages / batchSize);
 
-        for (int i = 0; i < totalImages; i++) {
-            printProgress(i, totalImages, "Training");
+        for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
+            printProgress(batchIndex, numBatches, "Training Batches");
 
-            Image img = images.get(i);
-            List<double[][]> inList = new ArrayList<>();
-            inList.add(multiply(img.data(), (1.0 / scaleFactor)));
+            int startIdx = batchIndex * batchSize;
+            int endIdx = Math.min(startIdx + batchSize, totalImages);
 
-            double[] out = layers.getFirst().getOutput(inList);
-            double[] dldO = getErrors(out, img.label());
+            List<double[]> batchErrors = new ArrayList<>();
 
-            layers.getLast().backPropagation(dldO);
+            for (int i = startIdx; i < endIdx; i++) {
+                Image img = images.get(i);
+                List<double[][]> inList = new ArrayList<>();
+                inList.add(multiply(img.data(), (1.0 / scaleFactor)));
+
+                double[] out = layers.getFirst().getOutput(inList);
+                double[] dldO = getErrors(out, img.label());
+                batchErrors.add(dldO);
+            }
+
+            // Aggregate errors and apply backpropagation
+            double[] avgError = new double[batchErrors.getFirst().length];
+            for (double[] error : batchErrors) {
+                for (int j = 0; j < avgError.length; j++) {
+                    avgError[j] += error[j];
+                }
+            }
+
+            for (int j = 0; j < avgError.length; j++) {
+                avgError[j] /= batchSize;
+            }
+
+            layers.getLast().backPropagation(avgError);
         }
         System.out.println();
     }
+
 
     private static void printProgress(int i, int totalImages, String processName) {
         double progress = (i + 1) * 100. / totalImages;
         String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
 
-        String progressBarColor = progress < 50 ? "\u001B[31m" : (progress < 80 ? "\u001B[33m" : "\u001B[32m");
+        String progressBarColor;
+        if (progress < 50) {
+            progressBarColor = RED;
+        } else {
+            progressBarColor = progress < 80 ? YELLOW : GREEN;
+        }
 
         String formattedProgress = String.format("%.2f", progress);
-        System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + "\u001B[0m\u001B[1m " + formattedProgress + "%\u001B[0m");
+        System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
     }
 
     public double[] guessInRealTime(double[] inputs) {
@@ -153,9 +181,14 @@ public class NeuralNetwork implements Serializable {
             Layer layer = layers.get(i);
             totalParams += layer.getParameterCount();
 
-            String color = (layer instanceof ConvolutionLayer) ? GREEN :
-                (layer instanceof MaxPoolLayer) ? BLUE :
-                    (layer instanceof FullyConnectedLayer) ? MAGENTA : RESET;
+            String color;
+            if (layer instanceof ConvolutionLayer) {
+                color = GREEN;
+            } else if (layer instanceof MaxPoolLayer) {
+                color = BLUE;
+            } else {
+                color = (layer instanceof FullyConnectedLayer) ? MAGENTA : RESET;
+            }
 
             sb.append(color).append("║ ").append(centerText(layer.toString(), 70)).append(" ║\n").append(RESET);
 

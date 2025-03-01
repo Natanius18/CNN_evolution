@@ -1,19 +1,23 @@
 package natanius.thesis.cnn.evolution.data;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+@NoArgsConstructor(access = PRIVATE)
 public class ExcelLogger {
 
     private static final String FILE_PATH = "models/training_results.xlsx";
 
-    public static void saveResults(String modelName,
+    public static synchronized void saveResults(String modelName,
                                    int epoch,
                                    float testAccuracy,
                                    float trainAccuracy,

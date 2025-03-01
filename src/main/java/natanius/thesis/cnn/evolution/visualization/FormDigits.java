@@ -13,30 +13,29 @@ import java.awt.image.BufferedImage;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.WindowConstants;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class FormDigits extends JFrame implements Runnable, MouseListener, MouseMotionListener, KeyListener {
 
-    private final int w = 28;
-    private final int h = 28;
-    private final int scale = 32;
+    private static final int W = 28;
+    private static final int H = 28;
+    private static final int SCALE = 32;
 
     private int mousePressed = 0;
     private int mx = 0;
     private int my = 0;
-    private double[][] colors = new double[w][h];
+    private double[][] colors = new double[W][H];
 
-    private BufferedImage img = new BufferedImage(w * scale + 200, h * scale, BufferedImage.TYPE_INT_RGB);
-    private BufferedImage pimg = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-    private int frame = 0;
-
-    private NeuralNetwork nn;
+    private final transient BufferedImage img = new BufferedImage(W * SCALE + 200, H * SCALE, BufferedImage.TYPE_INT_RGB);
+    private final BufferedImage pimg = new BufferedImage(W, H, BufferedImage.TYPE_INT_RGB);
+    private final NeuralNetwork nn;
 
     public FormDigits(NeuralNetwork nn) {
         this.nn = nn;
-        this.setSize(w * scale + 200 + 16, h * scale + 38);
+        this.setSize(W * SCALE + 200 + 16, H * SCALE + 38);
         this.setVisible(true);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.setLocation(50, 50);
         this.add(new JLabel(new ImageIcon(img)));
         addMouseListener(this);
@@ -48,15 +47,14 @@ public class FormDigits extends JFrame implements Runnable, MouseListener, Mouse
     public void run() {
         while (true) {
             this.repaint();
-//            try { Thread.sleep(17); } catch (InterruptedException e) {}
         }
     }
 
     @Override
     public void paint(Graphics g) {
         double[] inputs = new double[784];
-        for (int i = 0; i < w; i++) {
-            for (int j = 0; j < h; j++) {
+        for (int i = 0; i < W; i++) {
+            for (int j = 0; j < H; j++) {
                 if (mousePressed != 0) {
                     double dist = (i - mx) * (i - mx) + (j - my) * (j - my);
                     if (dist < 1) dist = 1;
@@ -69,7 +67,7 @@ public class FormDigits extends JFrame implements Runnable, MouseListener, Mouse
                 int color = (int) (colors[i][j] * 255);
                 color = (color << 16) | (color << 8) | color;
                 pimg.setRGB(i, j, color);
-                inputs[i + j * w] = colors[i][j];
+                inputs[i + j * W] = colors[i][j];
             }
         }
         double[] outputs = nn.guessInRealTime(inputs);
@@ -82,20 +80,19 @@ public class FormDigits extends JFrame implements Runnable, MouseListener, Mouse
             }
         }
         Graphics2D ig = (Graphics2D) img.getGraphics();
-        ig.drawImage(pimg, 0, 0, w * scale, h * scale, this);
+        ig.drawImage(pimg, 0, 0, W * SCALE, H * SCALE, this);
         ig.setColor(Color.lightGray);
-        ig.fillRect(w * scale + 1, 0, 200, h * scale);
+        ig.fillRect(W * SCALE + 1, 0, 200, H * SCALE);
         ig.setFont(new Font("TimesRoman", Font.BOLD, 48));
         for (int i = 0; i < 10; i++) {
             ig.setColor(maxDigit == i ? Color.RED : Color.GRAY);
-            ig.drawString(i + ":", w * scale + 20, i * w * scale / 15 + 150);
+            ig.drawString(i + ":", W * SCALE + 20, i * W * SCALE / 15 + 150);
             Color rectColor = new Color(0, (float) outputs[i], 0);
             int rectWidth = (int) (outputs[i] * 100);
             ig.setColor(rectColor);
-            ig.fillRect(w * scale + 70, i * w * scale / 15 + 122, rectWidth, 30);
+            ig.fillRect(W * SCALE + 70, i * W * SCALE / 15 + 122, rectWidth, 30);
         }
-        g.drawImage(img, 8, 30, w * scale + 200, h * scale, this);
-        frame++;
+        g.drawImage(img, 8, 30, W * SCALE + 200, H * SCALE, this);
     }
 
     @Override
@@ -132,7 +129,7 @@ public class FormDigits extends JFrame implements Runnable, MouseListener, Mouse
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            colors = new double[w][h];
+            colors = new double[W][H];
         }
     }
 
@@ -143,13 +140,13 @@ public class FormDigits extends JFrame implements Runnable, MouseListener, Mouse
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        mx = e.getX() / scale;
-        my = e.getY() / scale;
+        mx = e.getX() / SCALE;
+        my = e.getY() / SCALE;
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        mx = e.getX() / scale;
-        my = e.getY() / scale;
+        mx = e.getX() / SCALE;
+        my = e.getY() / SCALE;
     }
 }
