@@ -1,12 +1,12 @@
 package natanius.thesis.cnn.evolution.layers;
 
+import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class ConvolutionLayer extends Layer implements Serializable {
 
@@ -16,17 +16,15 @@ public class ConvolutionLayer extends Layer implements Serializable {
     private final int inRows;
     private final int inCols;
     private final double learningRate;
-    private final long seed;
     private List<double[][]> filters;
     private List<double[][]> lastInput;
 
-    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, long seed, int numFilters, double learningRate) {
+    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, int numFilters, double learningRate) {
         this.filterSize = filterSize;
         this.stepSize = stepSize;
         this.inLength = inLength;
         this.inRows = inRows;
         this.inCols = inCols;
-        this.seed = seed;
         this.learningRate = learningRate;
 
         generateRandomFilters(numFilters);
@@ -35,7 +33,6 @@ public class ConvolutionLayer extends Layer implements Serializable {
 
     private void generateRandomFilters(int numFilters) {
         List<double[][]> filters = new ArrayList<>();
-        Random random = new Random(seed);
 
         for (int n = 0; n < numFilters; n++) {
             double[][] newFilter = new double[filterSize][filterSize];
@@ -43,7 +40,7 @@ public class ConvolutionLayer extends Layer implements Serializable {
             for (int i = 0; i < filterSize; i++) {
                 for (int j = 0; j < filterSize; j++) {
 
-                    double value = random.nextGaussian();
+                    double value = RANDOM.nextGaussian();
                     newFilter[i][j] = value;
                 }
             }

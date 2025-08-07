@@ -1,30 +1,28 @@
 package natanius.thesis.cnn.evolution.layers;
 
+import static natanius.thesis.cnn.evolution.data.Constants.OUTPUT_CLASSES;
+import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
+
 import java.io.Serializable;
 import java.util.List;
-import java.util.Random;
 
 public class FullyConnectedLayer extends Layer implements Serializable {
 
-    private final long seed;
     private final double leak = 0.01;
 
     private final double[][] weights;
     private final int inLength;
-    private final int outLength;
     private final double learningRate;
 
     private double[] lastZ;
     private double[] lastX;
 
 
-    public FullyConnectedLayer(int inLength, int outLength, long seed, double learningRate) {
+    public FullyConnectedLayer(int inLength, double learningRate) {
         this.inLength = inLength;
-        this.outLength = outLength;
-        this.seed = seed;
         this.learningRate = learningRate;
 
-        weights = new double[inLength][outLength];
+        weights = new double[inLength][OUTPUT_CLASSES];
         setRandomWeights();
     }
 
@@ -32,11 +30,11 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
         lastX = input;
 
-        double[] z = new double[outLength];
-        double[] out = new double[outLength];
+        double[] z = new double[OUTPUT_CLASSES];
+        double[] out = new double[OUTPUT_CLASSES];
 
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < outLength; j++) {
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
                 z[j] += input[i] * weights[i][j];
             }
         }
@@ -44,7 +42,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         lastZ = z;
 
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < outLength; j++) {
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
                 out[j] = reLu(z[j]);
             }
         }
@@ -83,7 +81,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
             double dLdXsum = 0;
 
-            for (int j = 0; j < outLength; j++) {
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
 
                 dOdz = derivativeReLu(lastZ[j]);
                 dzdw = lastX[k];
@@ -127,28 +125,26 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
     @Override
     public int getOutputElements() {
-        return outLength;
+        return OUTPUT_CLASSES;
     }
 
     @Override
     public int getParameterCount() {
-        return inLength * outLength;  // Weight matrix size
+        return inLength * OUTPUT_CLASSES;  // Weight matrix size
     }
 
     @Override
     public String toString() {
         return String.format("🔗 FULLY CONNECTED | Inputs: %d → Outputs: %d | Parameters: %d",
-            inLength, outLength, getParameterCount());
+            inLength, OUTPUT_CLASSES, getParameterCount());
     }
 
 
 
     public void setRandomWeights(){
-        Random random = new Random(seed);
-
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < outLength; j++) {
-                weights[i][j] = random.nextGaussian();
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+                weights[i][j] = RANDOM.nextGaussian();
             }
         }
     }

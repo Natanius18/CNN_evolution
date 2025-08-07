@@ -1,5 +1,6 @@
 package natanius.thesis.cnn.evolution.network;
 
+import static natanius.thesis.cnn.evolution.data.Constants.SCALE_FACTOR;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
@@ -16,7 +17,6 @@ import natanius.thesis.cnn.evolution.layers.MaxPoolLayer;
 public class NeuralNetwork implements Serializable {
     @Getter
     private final List<Layer> layers;
-    private final int scaleFactor;
 
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
@@ -27,9 +27,8 @@ public class NeuralNetwork implements Serializable {
     private static final String YELLOW = "\u001B[33m"; // Stats
 
 
-    public NeuralNetwork(List<Layer> layers, int scaleFactor) {
+    public NeuralNetwork(List<Layer> layers) {
         this.layers = layers;
-        this.scaleFactor = scaleFactor;
         linkLayers();
     }
 
@@ -78,7 +77,7 @@ public class NeuralNetwork implements Serializable {
 
     public int guess(Image image) {
         List<double[][]> inList = new ArrayList<>();
-        inList.add(multiply(image.data(), (1.0 / scaleFactor)));
+        inList.add(multiply(image.data(), (1.0 / SCALE_FACTOR)));
 
         double[] out = layers.getFirst().getOutput(inList);
         return getMaxIndex(out);
@@ -116,7 +115,7 @@ public class NeuralNetwork implements Serializable {
             for (int i = startIdx; i < endIdx; i++) {
                 Image img = images.get(i);
                 List<double[][]> inList = new ArrayList<>();
-                inList.add(multiply(img.data(), (1.0 / scaleFactor)));
+                inList.add(multiply(img.data(), (1.0 / SCALE_FACTOR)));
 
                 double[] out = layers.getFirst().getOutput(inList);
                 double[] dldO = getErrors(out, img.label());

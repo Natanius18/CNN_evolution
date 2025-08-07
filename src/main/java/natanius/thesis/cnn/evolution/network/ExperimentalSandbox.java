@@ -4,6 +4,9 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
 import static java.util.stream.Collectors.toList;
+import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
+import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
+import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
 
@@ -13,22 +16,22 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Getter;
 import natanius.thesis.cnn.evolution.data.ExcelLogger;
 import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.layers.Layer;
 
+@Getter
 public class ExperimentalSandbox {
     private List<Image> imagesTrain = loadTrainData();
     private final List<Image> imagesTest = loadTestData();
     private final List<ModelRecord> modelRecords = new ArrayList<>();
-    private static final int EPOCHS = 3;
-    private static final boolean FAST_MODE = true;
 
 
     public ExperimentalSandbox() {
         if (FAST_MODE) {
             imagesTrain = imagesTrain.stream()
-                .limit(500)
+                .limit(5000)
                 .collect(toList());
         }
     }
@@ -41,10 +44,10 @@ public class ExperimentalSandbox {
 
     private void conductExperiment(int epoch, int architectureId, NeuralNetwork neuralNetwork, int[] chromosome) {
         System.out.printf("===================================================================================== Arch %d epoch %d%n", architectureId, epoch);
-        shuffle(imagesTrain);
+        shuffle(imagesTrain, RANDOM);
         long start = now().getEpochSecond();
 
-        neuralNetwork.train(imagesTrain, 3);
+        neuralNetwork.train(imagesTrain, EPOCHS);
 
         long trainingTime = now().getEpochSecond() - start;
         printTimeTaken(trainingTime);
