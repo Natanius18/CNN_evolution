@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -18,11 +19,13 @@ public class ExcelLogger {
     private static final String FILE_PATH = "models/training_results.xlsx";
 
     public static synchronized void saveResults(String modelName,
-                                   int epoch,
-                                   float testAccuracy,
-                                   float trainAccuracy,
-                                   int totalParams,
-                                   long trainingTime) {
+                                                int epoch,
+                                                float testAccuracy,
+                                                float trainAccuracy,
+                                                int totalParams,
+                                                long trainingTime,
+                                                int[] chromosome) {
+
         File file = new File(FILE_PATH);
         Workbook workbook;
         Sheet sheet;
@@ -48,6 +51,7 @@ public class ExcelLogger {
         row.createCell(3).setCellValue(trainAccuracy);
         row.createCell(4).setCellValue(totalParams);
         row.createCell(5).setCellValue(trainingTime);
+        row.createCell(6).setCellValue(Arrays.toString(chromosome)); // Новое поле
 
         try (FileOutputStream fos = new FileOutputStream(FILE_PATH)) {
             workbook.write(fos);
@@ -59,10 +63,12 @@ public class ExcelLogger {
 
     private static void createHeader(Sheet sheet) {
         Row header = sheet.createRow(0);
-        String[] columns = {"Model Name", "Epoch", "Test Accuracy", "Train Accuracy", "Total Parameters", "Training Time (s)"};
+        String[] columns = {
+            "Model Name", "Epoch", "Test Accuracy", "Train Accuracy",
+            "Total Parameters", "Training Time (s)", "Chromosome"
+        };
         for (int i = 0; i < columns.length; i++) {
             header.createCell(i).setCellValue(columns[i]);
         }
     }
 }
-

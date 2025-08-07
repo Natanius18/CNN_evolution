@@ -21,25 +21,25 @@ public class ExperimentalSandbox {
     private List<Image> imagesTrain = loadTrainData();
     private final List<Image> imagesTest = loadTestData();
     private final List<ModelRecord> modelRecords = new ArrayList<>();
-    private static final int EPOCHS = 5;
-    private static final boolean FAST_MODE = false;
+    private static final int EPOCHS = 3;
+    private static final boolean FAST_MODE = true;
 
 
     public ExperimentalSandbox() {
         if (FAST_MODE) {
             imagesTrain = imagesTrain.stream()
-                .limit(100)
+                .limit(500)
                 .collect(toList());
         }
     }
 
-    public void checkArchitecture(int architectureId, NeuralNetwork neuralNetwork) {
+    public void checkArchitecture(int architectureId, NeuralNetwork neuralNetwork, int[] chromosome) {
         for (int i = 1; i <= EPOCHS; i++) {
-            conductExperiment(i, architectureId, neuralNetwork);
+            conductExperiment(i, architectureId, neuralNetwork, chromosome);
         }
     }
 
-    private void conductExperiment(int epoch, int architectureId, NeuralNetwork neuralNetwork) {
+    private void conductExperiment(int epoch, int architectureId, NeuralNetwork neuralNetwork, int[] chromosome) {
         System.out.printf("===================================================================================== Arch %d epoch %d%n", architectureId, epoch);
         shuffle(imagesTrain);
         long start = now().getEpochSecond();
@@ -48,10 +48,10 @@ public class ExperimentalSandbox {
 
         long trainingTime = now().getEpochSecond() - start;
         printTimeTaken(trainingTime);
-        saveResults(neuralNetwork, epoch, architectureId, trainingTime);
+        saveResults(neuralNetwork, epoch, architectureId, trainingTime, chromosome);
     }
 
-    private void saveResults(NeuralNetwork neuralNetwork, int epoch, int architectureId, long trainingTime) {
+    private void saveResults(NeuralNetwork neuralNetwork, int epoch, int architectureId, long trainingTime, int[] chromosome) {
         float trainAccuracy = neuralNetwork.test(imagesTrain);
         float testAccuracy = neuralNetwork.test(imagesTest);
         int totalParams = neuralNetwork.getLayers().stream()
@@ -61,7 +61,7 @@ public class ExperimentalSandbox {
 
         String modelName = generateModelFileName(architectureId, epoch);
         saveToFile(modelName, neuralNetwork);
-        ExcelLogger.saveResults(modelName, epoch, testAccuracy, trainAccuracy, totalParams, trainingTime);
+        ExcelLogger.saveResults(modelName, epoch, testAccuracy, trainAccuracy, totalParams, trainingTime, chromosome);
 
         modelRecords.add(new ModelRecord(testAccuracy, "models/" + modelName + ".ser"));
         if (epoch % 5 == 0) {
