@@ -3,7 +3,6 @@ package natanius.thesis.cnn.evolution.network;
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
-import static java.util.stream.Collectors.toList;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
@@ -24,15 +23,14 @@ import natanius.thesis.cnn.evolution.layers.Layer;
 @Getter
 public class ExperimentalSandbox {
     private List<Image> imagesTrain = loadTrainData();
-    private final List<Image> imagesTest = loadTestData();
+    private List<Image> imagesTest = loadTestData();
     private final List<ModelRecord> modelRecords = new ArrayList<>();
 
 
     public ExperimentalSandbox() {
         if (FAST_MODE) {
-            imagesTrain = imagesTrain.stream()
-                .limit(5000)
-                .collect(toList());
+            imagesTrain = imagesTrain.subList(0, 5000);
+            imagesTest = imagesTest.subList(0, 1000);
         }
     }
 

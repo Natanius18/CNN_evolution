@@ -21,8 +21,7 @@ public class NetworkBuilder {
         } else {
             Layer prev = layers.getLast();
             if (prev.getOutputRows() < filterSize || prev.getOutputCols() < filterSize) {
-                System.out.println("Skipping layer: output too small for filter size " + filterSize);
-                return this;
+                throw new IllegalStateException("Output too small for filter size " + filterSize);
             }
             layers.add(new ConvolutionLayer(filterSize, stepSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols(), numFilters, learningRate));
         }
@@ -31,13 +30,20 @@ public class NetworkBuilder {
 
     public NetworkBuilder addMaxPoolLayer(int windowSize, int stepSize) {
         if (layers.isEmpty()) {
+            if (INPUT_COLS < windowSize) {
+                throw new IllegalStateException("Input too small for pooling window " + windowSize);
+            }
             layers.add(new MaxPoolLayer(stepSize, windowSize, 1, INPUT_ROWS, INPUT_COLS));
         } else {
             Layer prev = layers.getLast();
+            if (prev.getOutputRows() < windowSize || prev.getOutputCols() < windowSize) {
+                throw new IllegalStateException("Output too small for pooling window " + windowSize);
+            }
             layers.add(new MaxPoolLayer(stepSize, windowSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols()));
         }
         return this;
     }
+
 
     public NetworkBuilder addFullyConnectedLayer(double learningRate) {
         if (layers.isEmpty()) {
@@ -45,7 +51,6 @@ public class NetworkBuilder {
         } else {
             Layer prev = layers.getLast();
             int inputElements = prev.getOutputElements();
-            System.out.println(inputElements);
             if (inputElements <= 0) {
                 throw new IllegalStateException("Cannot add fully connected layer: previous layer output is invalid");
             }

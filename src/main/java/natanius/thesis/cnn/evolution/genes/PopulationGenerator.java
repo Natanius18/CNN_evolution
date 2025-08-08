@@ -17,22 +17,25 @@ public class PopulationGenerator {
         List<Individual> population = new ArrayList<>();
 
         for (int i = 0; i < POPULATION_SIZE; i++) {
-            int[] chromosome = new int[CONV_LAYERS * 2];
-
-            // Генерация количества фильтров
-            for (int j = 0; j < CONV_LAYERS; j++) {
-                chromosome[j] = RANDOM.nextInt(MAX_FILTERS) + 1; // [1, maxFilters]
-            }
-
-            // Генерация размеров фильтров
-            for (int j = 0; j < CONV_LAYERS; j++) {
-                chromosome[CONV_LAYERS + j] = RANDOM.nextInt(MAX_FILTER_SIZE) + 1; // [1, maxFilterSize]
-            }
-
-            population.add(new Individual(chromosome));
+            population.add(new Individual(generateChromosome()));
         }
 
         return population;
+    }
+
+    public static int[] generateChromosome() {
+        int[] chromosome = new int[CONV_LAYERS * 2];
+
+        // Генерация количества фильтров
+        for (int j = 0; j < CONV_LAYERS; j++) {
+            chromosome[j] = RANDOM.nextInt(MAX_FILTERS) + 1; // [1, maxFilters]
+        }
+
+        // Генерация размеров фильтров
+        for (int j = 0; j < CONV_LAYERS; j++) {
+            chromosome[CONV_LAYERS + j] = RANDOM.nextInt(MAX_FILTER_SIZE) + 1; // [1, maxFilterSize]
+        }
+        return chromosome;
     }
 }
 

@@ -88,7 +88,7 @@ public class NeuralNetwork implements Serializable {
 
         int size = images.size();
         for (int i = 0; i < size; i++) {
-            printProgress(i, size, "Testing");
+            printProgress(i, size, "Testing         ");
             Image img = images.get(i);
             int guess = guess(img);
 
