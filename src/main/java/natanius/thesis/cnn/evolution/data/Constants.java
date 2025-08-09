@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 public class Constants {
     public static final int CONV_LAYERS = 2;
     public static final int POPULATION_SIZE = 10;
+    public static final int GENERATIONS = 40;
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
-    public static final int GENERATIONS = 10;
-    public static final int MAX_FILTERS = 64;
-    public static final int MAX_FILTER_SIZE = 7;
+    public static final int[] ALLOWED_FILTER_SIZES = {3, 5, 7};
+    public static final int[] ALLOWED_FILTERS = {4, 8, 16, 32, 64};
     public static final float LEARNING_RATE = 0.3f;
     public static final double LEARNING_RATE_FULLY_CONNECTED = 0.7;
     public static final long SEED = 123L;

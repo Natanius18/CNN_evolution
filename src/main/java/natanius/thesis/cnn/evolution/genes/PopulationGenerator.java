@@ -1,8 +1,8 @@
 package natanius.thesis.cnn.evolution.genes;
 
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
-import static natanius.thesis.cnn.evolution.data.Constants.MAX_FILTERS;
-import static natanius.thesis.cnn.evolution.data.Constants.MAX_FILTER_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
@@ -28,13 +28,14 @@ public class PopulationGenerator {
 
         // Генерация количества фильтров
         for (int j = 0; j < CONV_LAYERS; j++) {
-            chromosome[j] = RANDOM.nextInt(MAX_FILTERS) + 1; // [1, maxFilters]
+            chromosome[j] = ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)];
         }
 
         // Генерация размеров фильтров
         for (int j = 0; j < CONV_LAYERS; j++) {
-            chromosome[CONV_LAYERS + j] = RANDOM.nextInt(MAX_FILTER_SIZE) + 1; // [1, maxFilterSize]
+            chromosome[CONV_LAYERS + j] = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
         }
+
         return chromosome;
     }
 }
