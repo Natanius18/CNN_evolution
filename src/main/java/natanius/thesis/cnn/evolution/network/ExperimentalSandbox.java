@@ -3,6 +3,7 @@ package natanius.thesis.cnn.evolution.network;
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
@@ -41,7 +42,9 @@ public class ExperimentalSandbox {
     }
 
     private void conductExperiment(int epoch, int architectureId, NeuralNetwork neuralNetwork, int[] chromosome) {
-        System.out.printf("===================================================================================== Arch %d epoch %d%n", architectureId, epoch);
+        if (DEBUG) {
+            System.out.printf("===================================================================================== Arch %d epoch %d%n", architectureId, epoch);
+        }
         shuffle(imagesTrain, RANDOM);
         long start = now().getEpochSecond();
 
@@ -58,7 +61,9 @@ public class ExperimentalSandbox {
         int totalParams = neuralNetwork.getLayers().stream()
             .map(Layer::getParameterCount)
             .reduce(Integer::sum).orElseThrow();
-        System.out.println("Success rate after epoch " + epoch + ": " + testAccuracy);
+        if (DEBUG) {
+            System.out.println("Success rate after epoch " + epoch + ": " + testAccuracy);
+        }
 
         String modelName = generateModelFileName(architectureId, epoch);
         saveToFile(modelName, neuralNetwork);
@@ -66,7 +71,9 @@ public class ExperimentalSandbox {
 
         modelRecords.add(new ModelRecord(testAccuracy, "models/" + modelName + ".ser"));
         if (epoch % 5 == 0) {
-            System.out.println(modelRecords);
+            if (DEBUG) {
+                System.out.println(modelRecords);
+            }
             cleanupModelFiles();
         }
     }
@@ -74,12 +81,16 @@ public class ExperimentalSandbox {
     private static void printTimeTaken(long totalSeconds) {
         long minutes = floorDiv(totalSeconds, 60);
         long seconds = totalSeconds - minutes * 60;
-        System.out.printf("Time: %d:%d%n", minutes, seconds);
+        if (DEBUG) {
+            System.out.printf("Time: %d:%d%n", minutes, seconds);
+        }
     }
     private void saveToFile(String fileName, NeuralNetwork neuralNetwork) {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("models/" + fileName + ".ser"))) {
             oos.writeObject(neuralNetwork);
-            System.out.println("Model saved: " + fileName);
+            if (DEBUG) {
+                System.out.println("Model saved: " + fileName);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -96,9 +107,13 @@ public class ExperimentalSandbox {
             if(!toKeep.contains(modelRecord)) {
                 File f = new File(modelRecord.fileName());
                 if(f.exists() && f.delete()) {
-                    System.out.println("Deleted file: " + modelRecord.fileName());
+                    if (DEBUG) {
+                        System.out.println("Deleted file: " + modelRecord.fileName());
+                    }
                 } else {
-                    System.out.println("Failed to delete file: " + modelRecord.fileName());
+                    if (DEBUG) {
+                        System.out.println("Failed to delete file: " + modelRecord.fileName());
+                    }
                 }
             }
         }

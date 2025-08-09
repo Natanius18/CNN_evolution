@@ -1,6 +1,7 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
@@ -13,9 +14,11 @@ public class GeneticFunctions {
 
     // Создание потомка, взяв части генов у двух родителей
     public static int[] crossover(int[] parent1, int[] parent2) {
-        System.out.println("\n--- Crossover ---");
-        System.out.println("Parent 1: " + Arrays.toString(parent1));
-        System.out.println("Parent 2: " + Arrays.toString(parent2));
+        if (DEBUG) {
+            System.out.println("\n--- Crossover ---");
+            System.out.println("Parent 1: " + Arrays.toString(parent1));
+            System.out.println("Parent 2: " + Arrays.toString(parent2));
+        }
 
         int[] child = Arrays.copyOf(parent2, parent2.length);
 
@@ -37,14 +40,18 @@ public class GeneticFunctions {
             System.arraycopy(parent1, start2, child, start2, end2 + 1 - start2);
         }
 
-        System.out.println("Child:    " + Arrays.toString(child));
+        if (DEBUG) {
+            System.out.println("Child:    " + Arrays.toString(child));
+        }
         return child;
     }
 
     // Перестановка двух случайных фильтров и размеров
     public static int[] mutate(int[] individual) {
-        System.out.println("\n--- Mutation ---");
-        System.out.println("Before: " + Arrays.toString(individual));
+        if (DEBUG) {
+            System.out.println("\n--- Mutation ---");
+            System.out.println("Before: " + Arrays.toString(individual));
+        }
 
         int[] child = Arrays.copyOf(individual, individual.length);
 
@@ -62,7 +69,9 @@ public class GeneticFunctions {
         child[j1] = child[j2];
         child[j2] = temp;
 
-        System.out.println("After:  " + Arrays.toString(child));
+        if (DEBUG) {
+            System.out.println("After:  " + Arrays.toString(child));
+        }
         return child;
     }
 

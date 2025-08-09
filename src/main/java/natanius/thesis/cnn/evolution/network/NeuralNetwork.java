@@ -1,5 +1,6 @@
 package natanius.thesis.cnn.evolution.network;
 
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.SCALE_FACTOR;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
@@ -96,7 +97,9 @@ public class NeuralNetwork implements Serializable {
                 correct++;
             }
         }
-        System.out.println();
+        if (DEBUG) {
+            System.out.println();
+        }
         return ((float) correct / size);
     }
 
@@ -136,23 +139,27 @@ public class NeuralNetwork implements Serializable {
 
             layers.getLast().backPropagation(avgError);
         }
-        System.out.println();
+        if (DEBUG) {
+            System.out.println();
+        }
     }
 
 
     private static void printProgress(int i, int totalImages, String processName) {
-        double progress = (i + 1) * 100. / totalImages;
-        String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
+        if (DEBUG) {
+            double progress = (i + 1) * 100. / totalImages;
+            String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
 
-        String progressBarColor;
-        if (progress < 50) {
-            progressBarColor = RED;
-        } else {
-            progressBarColor = progress < 80 ? YELLOW : GREEN;
+            String progressBarColor;
+            if (progress < 50) {
+                progressBarColor = RED;
+            } else {
+                progressBarColor = progress < 80 ? YELLOW : GREEN;
+            }
+
+            String formattedProgress = String.format("%.2f", progress);
+            System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
         }
-
-        String formattedProgress = String.format("%.2f", progress);
-        System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
     }
 
     public double[] guessInRealTime(double[] inputs) {

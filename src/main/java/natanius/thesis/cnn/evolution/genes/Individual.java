@@ -17,13 +17,9 @@ public class Individual {
         this.fitness = Float.MAX_VALUE; // по умолчанию — наихудшее значение
     }
 
-    public Individual copy() {
-        return new Individual(chromosome.clone());
-    }
-
     @Override
     public String toString() {
-        return "Individual[Chromosome: " + Arrays.toString(chromosome) + ", Fitness: " + fitness + "]";
+        return "Individual %d: [Chromosome: " + Arrays.toString(chromosome) + ", Fitness: " + fitness + "]";
     }
 }
 

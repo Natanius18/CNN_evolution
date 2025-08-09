@@ -1,5 +1,6 @@
 package natanius.thesis.cnn.evolution;
 
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
 import static natanius.thesis.cnn.evolution.data.Constants.TRAIN_AND_SAVE_BEST_MODEL;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
@@ -22,7 +23,9 @@ public class Evolution {
 
         for (int gen = 0; gen < GENERATIONS; gen++) {
             System.out.println("===================================== Generation " + gen + " =====================================");
-            System.out.println(Arrays.toString(population.stream().map(individual -> Arrays.toString(individual.getChromosome())).toArray()));
+            if (DEBUG) {
+                System.out.println(Arrays.toString(population.stream().map(individual -> Arrays.toString(individual.getChromosome())).toArray()));
+            }
             population = ga.evolve(population, sandbox.getImagesTrain(), sandbox.getImagesTest());
 
             // Найдём лучшую архитектуру
@@ -30,9 +33,11 @@ public class Evolution {
                 .min(Comparator.comparing(Individual::getFitness))
                 .orElseThrow();
 
-            System.out.println("Best fitness: " + best.getFitness());
-            System.out.println("Chromosome: " + Arrays.toString(best.getChromosome()));
-            System.out.println(buildNetworkFromChromosome(best.getChromosome()));
+            if (DEBUG) {
+                System.out.println("Best fitness: " + best.getFitness());
+                System.out.println("Chromosome: " + Arrays.toString(best.getChromosome()));
+                System.out.println(buildNetworkFromChromosome(best.getChromosome()));
+            }
 
             if (TRAIN_AND_SAVE_BEST_MODEL) {
                 sandbox.checkArchitecture(gen, buildNetworkFromChromosome(best.getChromosome()), best.getChromosome());

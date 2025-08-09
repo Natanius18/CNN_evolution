@@ -27,4 +27,5 @@ public class Constants {
     public static final int BATCH_SIZE = 3;
     public static final boolean FAST_MODE = true;
     public static final boolean TRAIN_AND_SAVE_BEST_MODEL = false;
+    public static final boolean DEBUG = false;
 }

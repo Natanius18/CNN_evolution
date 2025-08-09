@@ -3,6 +3,7 @@ package natanius.thesis.cnn.evolution.genes;
 import static java.util.Comparator.comparingDouble;
 import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.CROSSOVER_COUNT;
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.ELITE_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.MUTANT_COUNT;
@@ -28,11 +29,11 @@ public class GeneticAlgorithm {
         // 1. Оценка фитнеса
         for (int i = 0, currentPopulationSize = currentPopulation.size(); i < currentPopulationSize; i++) {
             Individual ind = currentPopulation.get(i);
-            System.out.println("Individual " + i);
             if (ind.getFitness() == Float.MAX_VALUE) {
                 float accuracy = evaluateFitness(ind, imagesTrain, imagesTest);
                 ind.setFitness(100f - accuracy * 100f); // чем меньше — тем лучше
             }
+            System.out.println(String.format(ind.toString(), i));
         }
 
         // 2. Сортировка по фитнесу
@@ -76,7 +77,9 @@ public class GeneticAlgorithm {
             return network.test(imagesTest);
 
         } catch (IllegalStateException e) {
-            System.out.println("Invalid chromosome " + Arrays.toString(ind.getChromosome()) + " → regenerating");
+            if (DEBUG) {
+                System.out.println("Invalid chromosome " + Arrays.toString(ind.getChromosome()) + " → regenerating");
+            }
 
             int[] newChromosome = generateChromosome();
             ind.setChromosome(newChromosome);
