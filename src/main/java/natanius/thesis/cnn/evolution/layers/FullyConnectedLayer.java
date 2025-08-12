@@ -26,7 +26,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         setRandomWeights();
     }
 
-    public double[] fullyConnectedForwardPass(double[] input){
+    public double[] fullyConnectedForwardPass(double[] input) {
 
         lastX = input;
 
@@ -41,7 +41,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
         lastZ = z;
 
-        for (int i = 0; i < inLength; i++) {
+        for (int i = 0; i < inLength; i++) {  // todo: fix math, delete useless code
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
                 out[j] = reLu(z[j]);
             }
@@ -87,7 +87,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
                 dzdw = lastX[k];
                 dzdx = weights[k][j];
 
-                dLdw = dLdO[j]*dOdz*dzdw;
+                dLdw = dLdO[j] * dOdz * dzdw;
 
                 weights[k][j] -= dLdw * learningRate;
 
@@ -140,8 +140,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
     }
 
 
-
-    public void setRandomWeights(){
+    public void setRandomWeights() {
         for (int i = 0; i < inLength; i++) {
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
                 weights[i][j] = RANDOM.nextGaussian();
@@ -149,11 +148,11 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         }
     }
 
-    public double reLu(double input){
+    public double reLu(double input) {
         return input <= 0 ? 0 : input;
     }
 
-    public double derivativeReLu(double input){
+    public double derivativeReLu(double input) {
         return input <= 0 ? leak : 1;
     }
 

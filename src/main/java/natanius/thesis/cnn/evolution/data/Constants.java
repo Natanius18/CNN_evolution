@@ -8,11 +8,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = PRIVATE)
 public class Constants {
     public static final int CONV_LAYERS = 2;
-    public static final int POPULATION_SIZE = 10;
+    public static final int POPULATION_SIZE = 40;
     public static final int GENERATIONS = 40;
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
+    public static final int CONV_STEP_SIZE = 1;
+    public static final int MAX_POOL_WINDOW_SIZE = 3;
+    public static final int MAX_POOL_STEP_SIZE = 2;
     public static final int[] ALLOWED_FILTER_SIZES = {3, 5, 7};
     public static final int[] ALLOWED_FILTERS = {4, 8, 16, 32, 64};
     public static final float LEARNING_RATE = 0.3f;

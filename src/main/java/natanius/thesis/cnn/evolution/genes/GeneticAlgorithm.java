@@ -33,7 +33,7 @@ public class GeneticAlgorithm {
                 float accuracy = evaluateFitness(ind, imagesTrain, imagesTest);
                 ind.setFitness(100f - accuracy * 100f); // чем меньше — тем лучше
             }
-            System.out.println(String.format(ind.toString(), i));
+            System.out.println(String.format(ind.toString(), i + 1));
         }
 
         // 2. Сортировка по фитнесу
@@ -48,6 +48,9 @@ public class GeneticAlgorithm {
         while (nextGeneration.size() < ELITE_COUNT + CROSSOVER_COUNT) {
             Individual p1 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
             Individual p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
+            while (Arrays.equals(p1.getChromosome(), p2.getChromosome())) {
+                p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
+            }
 
             int[] childChromosome = GeneticFunctions.crossover(
                 p1.getChromosome(), p2.getChromosome());

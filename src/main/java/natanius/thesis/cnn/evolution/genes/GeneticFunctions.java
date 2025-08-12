@@ -1,9 +1,12 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
+import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
+import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_STEP_SIZE;
+import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_WINDOW_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.util.Arrays;
@@ -27,8 +30,8 @@ public class GeneticFunctions {
         int p2 = RANDOM.nextInt(CONV_LAYERS);
         int start1 = Math.min(p1, p2);
         int end1 = Math.max(p1, p2);
-        if (end1 + 1 - start1 >= 0) {
-            System.arraycopy(parent1, start1, child, start1, end1 + 1 - start1);
+        if (end1 + CONV_STEP_SIZE - start1 >= 0) {
+            System.arraycopy(parent1, start1, child, start1, end1 + CONV_STEP_SIZE - start1);
         }
 
         // Кроссовер по размерам фильтров
@@ -36,8 +39,8 @@ public class GeneticFunctions {
         int p4 = RANDOM.nextInt(CONV_LAYERS) + CONV_LAYERS;
         int start2 = Math.min(p3, p4);
         int end2 = Math.max(p3, p4);
-        if (end2 + 1 - start2 >= 0) {
-            System.arraycopy(parent1, start2, child, start2, end2 + 1 - start2);
+        if (end2 + CONV_STEP_SIZE - start2 >= 0) {
+            System.arraycopy(parent1, start2, child, start2, end2 + CONV_STEP_SIZE - start2);
         }
 
         if (DEBUG) {
@@ -82,8 +85,8 @@ public class GeneticFunctions {
             int filters = chromosome[i];
             int filterSize = chromosome[i + CONV_LAYERS];
 
-            builder.addConvolutionLayer(filters, filterSize, 1, LEARNING_RATE)
-                .addMaxPoolLayer(3, 2);
+            builder.addConvolutionLayer(filters, filterSize, CONV_STEP_SIZE, LEARNING_RATE)
+                .addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
         }
 
         return builder

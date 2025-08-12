@@ -22,7 +22,7 @@ public class Evolution {
         ExperimentalSandbox sandbox = new ExperimentalSandbox();
 
         for (int gen = 0; gen < GENERATIONS; gen++) {
-            System.out.println("===================================== Generation " + gen + " =====================================");
+            System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
             if (DEBUG) {
                 System.out.println(Arrays.toString(population.stream().map(individual -> Arrays.toString(individual.getChromosome())).toArray()));
             }
@@ -33,9 +33,8 @@ public class Evolution {
                 .min(Comparator.comparing(Individual::getFitness))
                 .orElseThrow();
 
+            System.out.println("\nBest fitness: " + best.getFitness() + " for " + Arrays.toString(best.getChromosome()));
             if (DEBUG) {
-                System.out.println("Best fitness: " + best.getFitness());
-                System.out.println("Chromosome: " + Arrays.toString(best.getChromosome()));
                 System.out.println(buildNetworkFromChromosome(best.getChromosome()));
             }
 
