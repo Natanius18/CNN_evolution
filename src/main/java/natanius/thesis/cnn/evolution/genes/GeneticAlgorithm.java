@@ -1,12 +1,11 @@
 package natanius.thesis.cnn.evolution.genes;
 
+import static java.lang.Math.floorDiv;
 import static java.util.Comparator.comparingDouble;
-import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.CROSSOVER_COUNT;
-import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.ELITE_COUNT;
-import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.MUTANT_COUNT;
+import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateChromosome;
@@ -14,27 +13,29 @@ import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateCh
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import natanius.thesis.cnn.evolution.data.Image;
+import natanius.thesis.cnn.evolution.network.EpochTrainer;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 @RequiredArgsConstructor
 public class GeneticAlgorithm {
+
+    private final EpochTrainer epochTrainer = new EpochTrainer();
+
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> imagesTrain, List<Image> imagesTest) {
 
-        if (FAST_MODE) {
-            imagesTrain = imagesTrain.subList(0, 200);
-        }
-
         // 1. Оценка фитнеса
-        for (int i = 0, currentPopulationSize = currentPopulation.size(); i < currentPopulationSize; i++) {
-            Individual ind = currentPopulation.get(i);
-            if (ind.getFitness() == Float.MAX_VALUE) {
-                float accuracy = evaluateFitness(ind, imagesTrain, imagesTest);
-                ind.setFitness(100f - accuracy * 100f); // чем меньше — тем лучше
-            }
-            System.out.println(String.format(ind.toString(), i + 1));
-        }
+        IntStream.range(0, currentPopulation.size())
+            .parallel()
+            .forEach(i -> {
+                Individual ind = currentPopulation.get(i);
+                if (ind.getFitness() == Float.MAX_VALUE) {
+                    ind.setFitness(evaluateFitness(ind, imagesTrain, imagesTest));
+                }
+                System.out.println(Thread.currentThread().getName() + ": " + ind);
+            });
 
         // 2. Сортировка по фитнесу
         currentPopulation.sort(comparingDouble(Individual::getFitness));
@@ -48,8 +49,15 @@ public class GeneticAlgorithm {
         while (nextGeneration.size() < ELITE_COUNT + CROSSOVER_COUNT) {
             Individual p1 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
             Individual p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
+            int attempts = 0;
             while (Arrays.equals(p1.getChromosome(), p2.getChromosome())) {
                 p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
+                System.out.println("Trying another parent");
+                attempts++;
+                if (attempts > 10) {
+                    p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT, POPULATION_SIZE));
+                    break;
+                }
             }
 
             int[] childChromosome = GeneticFunctions.crossover(
@@ -74,15 +82,17 @@ public class GeneticAlgorithm {
 
     private float evaluateFitness(Individual ind, List<Image> imagesTrain, List<Image> imagesTest) {
         try {
+//            long start = now().getEpochSecond();
             NeuralNetwork network = buildNetworkFromChromosome(ind.getChromosome());
-
-            network.train(imagesTrain, BATCH_SIZE);
-            return network.test(imagesTest);
+            float accuracy = epochTrainer.train(network, imagesTrain, imagesTest);
+//            long trainingTime = now().getEpochSecond() - start;
+//            printTimeTaken(trainingTime);
+            return 100f - accuracy * 100f;  // чем меньше — тем лучше
 
         } catch (IllegalStateException e) {
-            if (DEBUG) {
-                System.out.println("Invalid chromosome " + Arrays.toString(ind.getChromosome()) + " → regenerating");
-            }
+//            if (DEBUG) {
+            System.out.println("Invalid chromosome " + Arrays.toString(ind.getChromosome()) + " → regenerating");
+//            }
 
             int[] newChromosome = generateChromosome();
             ind.setChromosome(newChromosome);
@@ -90,4 +100,9 @@ public class GeneticAlgorithm {
         }
     }
 
+    private static void printTimeTaken(long totalSeconds) {
+        long minutes = floorDiv(totalSeconds, 60);
+        long seconds = totalSeconds - minutes * 60;
+        System.out.printf("Time for one: %d:%d%n", minutes, seconds);
+    }
 }

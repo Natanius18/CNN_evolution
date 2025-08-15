@@ -3,9 +3,9 @@ package natanius.thesis.cnn.evolution.network;
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
+import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
-import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
@@ -29,10 +29,10 @@ public class ExperimentalSandbox {
 
 
     public ExperimentalSandbox() {
-        if (FAST_MODE) {
-            imagesTrain = imagesTrain.subList(0, 5000);
-            imagesTest = imagesTest.subList(0, 1000);
-        }
+//        if (FAST_MODE) {
+//            imagesTrain = imagesTrain.subList(0, 5000);
+//            imagesTest = imagesTest.subList(0, 1000);
+//        }
     }
 
     public void checkArchitecture(int architectureId, NeuralNetwork neuralNetwork, int[] chromosome) {
@@ -48,7 +48,7 @@ public class ExperimentalSandbox {
         shuffle(imagesTrain, RANDOM);
         long start = now().getEpochSecond();
 
-        neuralNetwork.train(imagesTrain, EPOCHS);
+        neuralNetwork.train(imagesTrain, BATCH_SIZE);
 
         long trainingTime = now().getEpochSecond() - start;
         printTimeTaken(trainingTime);

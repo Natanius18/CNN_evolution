@@ -41,10 +41,8 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
         lastZ = z;
 
-        for (int i = 0; i < inLength; i++) {  // todo: fix math, delete useless code
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                out[j] = reLu(z[j]);
-            }
+        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            out[j] = reLu(z[j]);
         }
 
         return out;
@@ -152,7 +150,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         return input <= 0 ? 0 : input;
     }
 
-    public double derivativeReLu(double input) {
+    public double derivativeReLu(double input) { // todo: fix math, delete useless code
         return input <= 0 ? leak : 1;
     }
 

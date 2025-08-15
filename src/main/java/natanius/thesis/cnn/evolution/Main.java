@@ -20,7 +20,7 @@
 //            NeuralNetwork neuralNetwork = NeuralNetworkManager.initializeNetwork();
 //
 //            Thread thread = new Thread(() -> {
-//                sandbox.checkArchitecture(archId, neuralNetwork);
+//                sandbox.train(archId, neuralNetwork);
 //            });
 //
 //            threads.add(thread);

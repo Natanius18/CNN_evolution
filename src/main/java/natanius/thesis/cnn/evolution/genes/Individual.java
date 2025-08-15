@@ -19,7 +19,7 @@ public class Individual {
 
     @Override
     public String toString() {
-        return "Individual %d: [Chromosome: " + Arrays.toString(chromosome) + ", Fitness: " + fitness + "]";
+        return "Individual: [Chromosome: " + Arrays.toString(chromosome) + ", Fitness: " + fitness + "]";
     }
 }
 
