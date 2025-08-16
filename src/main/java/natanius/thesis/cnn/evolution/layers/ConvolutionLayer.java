@@ -182,12 +182,11 @@ public class ConvolutionLayer extends Layer implements Serializable {
                 double[][] spacedError = spaceArray(error);
                 double[][] dLdF = convolve(lastInput.get(i), spacedError, 1);
 
-                double[][] delta = multiply(dLdF, learningRate * -1);
-                double[][] newTotalDelta = add(filtersDelta.get(f), delta);
-                filtersDelta.set(f, newTotalDelta);
+                multiply(dLdF, learningRate * -1);
+                add(filtersDelta.get(f), dLdF);
 
                 double[][] flippedError = flipArrayHorizontal(flipArrayVertical(spacedError));
-                errorForInput = add(errorForInput, fullConvolve(currFilter, flippedError));
+                add(errorForInput, fullConvolve(currFilter, flippedError));
 
             }
 
@@ -196,8 +195,9 @@ public class ConvolutionLayer extends Layer implements Serializable {
         }
 
         for (int f = 0; f < filters.size(); f++) {
-            double[][] modified = add(filtersDelta.get(f), filters.get(f));
-            filters.set(f, modified);
+            double[][] a = filtersDelta.get(f);
+            add(a, filters.get(f));
+            filters.set(f, a);
         }
 
         if (previousLayer != null) {

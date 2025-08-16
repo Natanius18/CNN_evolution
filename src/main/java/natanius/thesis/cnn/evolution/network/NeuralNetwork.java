@@ -4,6 +4,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.SCALE_FACTOR;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
+import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiplyWithNewArray;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -57,8 +58,10 @@ public class NeuralNetwork implements Serializable {
         double[] expected = new double[numClasses];
 
         expected[correctAnswer] = 1;
+        multiply(expected, -1);
 
-        return add(networkOutput, multiply(expected, -1));
+        add(networkOutput, expected);
+        return networkOutput;
     }
 
     private int getMaxIndex(double[] in) {
@@ -78,7 +81,8 @@ public class NeuralNetwork implements Serializable {
 
     public int guess(Image image) {
         List<double[][]> inList = new ArrayList<>();
-        inList.add(multiply(image.data(), (1.0 / SCALE_FACTOR)));
+        multiply(image.data(), (1.0 / SCALE_FACTOR));
+        inList.add(image.data());
 
         double[] out = layers.getFirst().getOutput(inList);
         return getMaxIndex(out);
@@ -118,7 +122,7 @@ public class NeuralNetwork implements Serializable {
             for (int i = startIdx; i < endIdx; i++) {
                 Image img = images.get(i);
                 List<double[][]> inList = new ArrayList<>();
-                inList.add(multiply(img.data(), (1.0 / SCALE_FACTOR)));
+                inList.add(multiplyWithNewArray(img.data(), (1.0 / SCALE_FACTOR)));
 
                 double[] out = layers.getFirst().getOutput(inList);
                 double[] dldO = getErrors(out, img.label());
@@ -169,7 +173,8 @@ public class NeuralNetwork implements Serializable {
             System.arraycopy(inputs, i * 28, inputMatrix[i], 0, 28);
         }
         List<double[][]> inList = new ArrayList<>();
-        inList.add(multiply(inputMatrix, (1.0 / 255)));
+        multiply(inputMatrix, (1.0 / 255));
+        inList.add(inputMatrix);
         return layers.getFirst().getOutput(inList);
     }
 
