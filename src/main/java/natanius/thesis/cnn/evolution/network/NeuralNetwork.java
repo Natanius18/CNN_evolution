@@ -1,10 +1,8 @@
 package natanius.thesis.cnn.evolution.network;
 
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
-import static natanius.thesis.cnn.evolution.data.Constants.SCALE_FACTOR;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
-import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiplyWithNewArray;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -81,9 +79,7 @@ public class NeuralNetwork implements Serializable {
 
     public int guess(Image image) {
         List<double[][]> inList = new ArrayList<>();
-        multiply(image.data(), (1.0 / SCALE_FACTOR));
         inList.add(image.data());
-
         double[] out = layers.getFirst().getOutput(inList);
         return getMaxIndex(out);
     }
@@ -116,13 +112,14 @@ public class NeuralNetwork implements Serializable {
 
             int startIdx = batchIndex * batchSize;
             int endIdx = Math.min(startIdx + batchSize, totalImages);
+            int currentBatchSize = endIdx - startIdx; // Фактический размер батча
 
-            List<double[]> batchErrors = new ArrayList<>();
+            List<double[]> batchErrors = new ArrayList<>(currentBatchSize);
 
             for (int i = startIdx; i < endIdx; i++) {
                 Image img = images.get(i);
                 List<double[][]> inList = new ArrayList<>();
-                inList.add(multiplyWithNewArray(img.data(), (1.0 / SCALE_FACTOR)));
+                inList.add(img.data());
 
                 double[] out = layers.getFirst().getOutput(inList);
                 double[] dldO = getErrors(out, img.label());
@@ -138,7 +135,7 @@ public class NeuralNetwork implements Serializable {
             }
 
             for (int j = 0; j < avgError.length; j++) {
-                avgError[j] /= batchSize;
+                avgError[j] /= currentBatchSize; // делим на реальный размер батча
             }
 
             layers.getLast().backPropagation(avgError);
@@ -147,6 +144,7 @@ public class NeuralNetwork implements Serializable {
             System.out.println();
         }
     }
+
 
 
     private static void printProgress(int i, int totalImages, String processName) {

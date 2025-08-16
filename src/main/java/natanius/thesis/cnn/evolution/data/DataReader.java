@@ -3,6 +3,7 @@ package natanius.thesis.cnn.evolution.data;
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
+import static natanius.thesis.cnn.evolution.data.Constants.SCALE_FACTOR;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -39,8 +40,7 @@ public class DataReader {
         double[][] data = new double[28][28];
 
         IntStream.range(1, items.length)
-            .parallel()
-            .forEach(i -> data[(i - 1) / 28][(i - 1) % 28] = parseInt(items[i]));
+            .forEach(i -> data[(i - 1) / 28][(i - 1) % 28] = (double) parseInt(items[i]) / SCALE_FACTOR); // нормализация данных
 
         return new Image(data, label);
     }

@@ -21,17 +21,6 @@ public class MatrixUtility {
         }
     }
 
-    public static double[][] multiplyWithNewArray(double[][] a, double scalar) {
-        double[][] out = new double[a.length][a[0].length];
-
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a[0].length; j++) {
-                out[i][j] = a[i][j] * scalar;
-            }
-        }
-        return out;
-    }
-
     public static void multiply(double[][] a, double scalar) {
         for (int i = 0; i < a.length; i++) {
             for (int j = 0; j < a[i].length; j++) {

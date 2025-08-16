@@ -14,8 +14,8 @@ public class Constants {
     public static final int INPUT_COLS = 28;
     public static final int OUTPUT_CLASSES = 10;
     public static final int SCALE_FACTOR = 25600;
-    public static final int[] ALLOWED_FILTER_SIZES = {3, 5, 7};
-    public static final int[] ALLOWED_FILTERS = {4, 8, 16, 32, 64};
+    public static final int[] ALLOWED_FILTER_SIZES = {7}; //, 5, 7};
+    public static final int[] ALLOWED_FILTERS = {4, 16}; //, 8, 16, 32, 64};
 
     // Parameters to optimize later
     public static final int CONV_LAYERS = 2;
