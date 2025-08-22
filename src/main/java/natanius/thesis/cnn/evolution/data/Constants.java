@@ -4,6 +4,10 @@ import static lombok.AccessLevel.PRIVATE;
 
 import java.util.Random;
 import lombok.NoArgsConstructor;
+import natanius.thesis.cnn.evolution.activation.Activation;
+import natanius.thesis.cnn.evolution.activation.LeakyReLU;
+import natanius.thesis.cnn.evolution.activation.ReLU;
+import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
 @NoArgsConstructor(access = PRIVATE)
 public class Constants {
@@ -14,8 +18,10 @@ public class Constants {
     public static final int INPUT_COLS = 28;
     public static final int OUTPUT_CLASSES = 10;
     public static final int SCALE_FACTOR = 25600;
+    public final static double LEAK = 0.01;
     public static final int[] ALLOWED_FILTER_SIZES = {7}; //, 5, 7};
     public static final int[] ALLOWED_FILTERS = {4, 16}; //, 8, 16, 32, 64};
+    public static final Activation[] ACTIVATION_STRATEGIES = {new ReLU(), new LeakyReLU(), new Sigmoid()};
 
     // Parameters to optimize later
     public static final int CONV_LAYERS = 2;

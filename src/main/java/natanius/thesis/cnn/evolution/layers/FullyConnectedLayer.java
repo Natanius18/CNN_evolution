@@ -5,10 +5,11 @@ import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.io.Serializable;
 import java.util.List;
+import natanius.thesis.cnn.evolution.activation.Activation;
 
 public class FullyConnectedLayer extends Layer implements Serializable {
 
-    private final double leak = 0.01;
+    private final Activation activation;
 
     private final double[][] weights;
     private final int inLength;
@@ -18,7 +19,8 @@ public class FullyConnectedLayer extends Layer implements Serializable {
     private double[] lastX;
 
 
-    public FullyConnectedLayer(int inLength, double learningRate) {
+    public FullyConnectedLayer(Activation activation, int inLength, double learningRate) {
+        this.activation = activation;
         this.inLength = inLength;
         this.learningRate = learningRate;
 
@@ -42,7 +44,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         lastZ = z;
 
         for (int j = 0; j < OUTPUT_CLASSES; j++) {
-            out[j] = reLu(z[j]);
+            out[j] = activation.forward(z[j]);
         }
 
         return out;
@@ -81,7 +83,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
 
-                dOdz = derivativeReLu(lastZ[j]);
+                dOdz = activation.backward(lastZ[j]);
                 dzdw = lastX[k];
                 dzdx = weights[k][j];
 
@@ -144,14 +146,6 @@ public class FullyConnectedLayer extends Layer implements Serializable {
                 weights[i][j] = RANDOM.nextGaussian();
             }
         }
-    }
-
-    public double reLu(double input) {
-        return input <= 0 ? 0 : input;
-    }
-
-    public double derivativeReLu(double input) { // todo: fix math, delete useless code
-        return input <= 0 ? leak : 1;
     }
 
 }

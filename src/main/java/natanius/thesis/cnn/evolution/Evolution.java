@@ -37,7 +37,7 @@ public class Evolution {
             long start = now().getEpochSecond();
             System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
             if (DEBUG) {
-                System.out.println(Arrays.toString(population.stream().map(individual -> Arrays.toString(individual.getChromosome())).toArray()));
+                System.out.println(Arrays.toString(population.stream().map(Individual::getChromosome).toArray()));
             }
 
 
@@ -49,7 +49,7 @@ public class Evolution {
                 .min(Comparator.comparing(Individual::getFitness))
                 .orElseThrow();
 
-            System.out.println("\nBest fitness: " + best.getFitness() + " for " + Arrays.toString(best.getChromosome()));
+            System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             if (DEBUG) {
                 System.out.println(buildNetworkFromChromosome(best.getChromosome()));
             }

@@ -1,5 +1,8 @@
 package natanius.thesis.cnn.evolution.genes;
 
+import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
@@ -15,82 +18,95 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class GeneticFunctions {
 
-    // Создание потомка, взяв части генов у двух родителей
-    public static int[] crossover(int[] parent1, int[] parent2) {
+    // Кроссовер: создаём ребёнка из двух родителей
+    public static Chromosome crossover(Chromosome parent1, Chromosome parent2) {
+        int[] childFilters = new int[CONV_LAYERS];
+        int[] childFilterSizes = new int[CONV_LAYERS];
+
+        // Одноточечный кроссовер по количеству фильтров
+        int cutPoint1 = RANDOM.nextInt(CONV_LAYERS);
+        for (int i = 0; i < CONV_LAYERS; i++) {
+            childFilters[i] = (i < cutPoint1) ? parent1.getNumFilters()[i] : parent2.getNumFilters()[i];
+        }
+
+        // Одноточечный кроссовер по размерам фильтров
+        int cutPoint2 = RANDOM.nextInt(CONV_LAYERS);
+        for (int i = 0; i < CONV_LAYERS; i++) {
+            childFilterSizes[i] = (i < cutPoint2) ? parent1.getFilterSizes()[i] : parent2.getFilterSizes()[i];
+        }
+
+        // Активацию выбираем случайно у одного из родителей
+        var childActivation = (RANDOM.nextBoolean()) ? parent1.getActivation() : parent2.getActivation();
+
+        Chromosome child = new Chromosome(childFilters, childFilterSizes, childActivation);
+
         if (DEBUG) {
             System.out.println("\n--- Crossover ---");
-            System.out.println("Parent 1: " + Arrays.toString(parent1));
-            System.out.println("Parent 2: " + Arrays.toString(parent2));
+            System.out.println("Parent1 filters: " + Arrays.toString(parent1.getNumFilters()));
+            System.out.println("Parent2 filters: " + Arrays.toString(parent2.getNumFilters()));
+            System.out.println("Child   filters: " + Arrays.toString(child.getNumFilters()));
+            System.out.println("Child   sizes:   " + Arrays.toString(child.getFilterSizes()));
+            System.out.println("Child   act:     " + child.getActivation().getClass().getSimpleName());
         }
 
-        int[] child = Arrays.copyOf(parent2, parent2.length);
-
-        // Кроссовер по числу фильтров
-        int p1 = RANDOM.nextInt(CONV_LAYERS);
-        int p2 = RANDOM.nextInt(CONV_LAYERS);
-        int start1 = Math.min(p1, p2);
-        int end1 = Math.max(p1, p2);
-        if (end1 + CONV_STEP_SIZE - start1 >= 0) {
-            System.arraycopy(parent1, start1, child, start1, end1 + CONV_STEP_SIZE - start1);
-        }
-
-        // Кроссовер по размерам фильтров
-        int p3 = RANDOM.nextInt(CONV_LAYERS) + CONV_LAYERS;
-        int p4 = RANDOM.nextInt(CONV_LAYERS) + CONV_LAYERS;
-        int start2 = Math.min(p3, p4);
-        int end2 = Math.max(p3, p4);
-        if (end2 + CONV_STEP_SIZE - start2 >= 0) {
-            System.arraycopy(parent1, start2, child, start2, end2 + CONV_STEP_SIZE - start2);
-        }
-
-        if (DEBUG) {
-            System.out.println("Child:    " + Arrays.toString(child));
-        }
         return child;
     }
 
-    // Перестановка двух случайных фильтров и размеров
-    public static int[] mutate(int[] individual) {
+    // Мутация: случайная перестановка или замена значений
+    public static Chromosome mutate(Chromosome individual) {
+        int[] filters = Arrays.copyOf(individual.getNumFilters(), CONV_LAYERS);
+        int[] sizes = Arrays.copyOf(individual.getFilterSizes(), CONV_LAYERS);
+        var activation = individual.getActivation();
+
+        // Случайно меняем количество фильтров в одном месте
+        int idxF = RANDOM.nextInt(CONV_LAYERS);
+        filters[idxF] = ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)];
+
+        // Случайно меняем размер фильтра в одном месте
+        int idxS = RANDOM.nextInt(CONV_LAYERS);
+        sizes[idxS] = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
+
+        // Иногда мутируем функцию активации
+        if (RANDOM.nextDouble() < 0.3) { // вероятность 30%
+            activation = ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)];
+        }
+
+        Chromosome mutated = new Chromosome(filters, sizes, activation);
+
         if (DEBUG) {
             System.out.println("\n--- Mutation ---");
-            System.out.println("Before: " + Arrays.toString(individual));
+            System.out.println("Before filters: " + Arrays.toString(individual.getNumFilters()));
+            System.out.println("After  filters: " + Arrays.toString(mutated.getNumFilters()));
+            System.out.println("After  sizes:   " + Arrays.toString(mutated.getFilterSizes()));
+            System.out.println("After  act:     " + mutated.getActivation().getClass().getSimpleName());
         }
 
-        int[] child = Arrays.copyOf(individual, individual.length);
-
-        // Мутация фильтров (перестановка)
-        int i1 = RANDOM.nextInt(CONV_LAYERS);
-        int i2 = RANDOM.nextInt(CONV_LAYERS);
-        int temp = child[i1];
-        child[i1] = child[i2];
-        child[i2] = temp;
-
-        // Мутация размеров фильтров (перестановка)
-        int j1 = RANDOM.nextInt(CONV_LAYERS) + CONV_LAYERS;
-        int j2 = RANDOM.nextInt(CONV_LAYERS) + CONV_LAYERS;
-        temp = child[j1];
-        child[j1] = child[j2];
-        child[j2] = temp;
-
-        if (DEBUG) {
-            System.out.println("After:  " + Arrays.toString(child));
-        }
-        return child;
+        return mutated;
     }
 
-    public static NeuralNetwork buildNetworkFromChromosome(int[] chromosome) {
+    public static NeuralNetwork buildNetworkFromChromosome(Chromosome chromosome) {
         NetworkBuilder builder = new NetworkBuilder();
 
+        // добавляем сверточные и pooling-слои
         for (int i = 0; i < CONV_LAYERS; i++) {
-            int filters = chromosome[i];
-            int filterSize = chromosome[i + CONV_LAYERS];
+            int filters = chromosome.getNumFilters()[i];
+            int filterSize = chromosome.getFilterSizes()[i];
 
-            builder.addConvolutionLayer(filters, filterSize, CONV_STEP_SIZE, LEARNING_RATE)
-                .addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
+            builder.addConvolutionLayer(
+                filters,
+                filterSize,
+                CONV_STEP_SIZE,
+                LEARNING_RATE
+            ).addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
         }
 
+        // добавляем fully connected слой с активацией из хромосомы
         return builder
-            .addFullyConnectedLayer(LEARNING_RATE_FULLY_CONNECTED)
+            .addFullyConnectedLayer(
+                LEARNING_RATE_FULLY_CONNECTED,
+                chromosome.getActivation()
+            )
             .build();
     }
+
 }

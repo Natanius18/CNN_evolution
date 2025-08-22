@@ -8,10 +8,8 @@ import static natanius.thesis.cnn.evolution.data.Constants.MUTANT_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
-import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateChromosome;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +48,7 @@ public class GeneticAlgorithm {
             Individual p1 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
             Individual p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
             int attempts = 0;
-            while (Arrays.equals(p1.getChromosome(), p2.getChromosome())) {
+            while (p1.equals(p2)) {
                 p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
                 System.out.println("Trying another parent");
                 attempts++;
@@ -60,7 +58,7 @@ public class GeneticAlgorithm {
                 }
             }
 
-            int[] childChromosome = GeneticFunctions.crossover(
+            Chromosome childChromosome = GeneticFunctions.crossover(
                 p1.getChromosome(), p2.getChromosome());
             nextGeneration.add(new Individual(childChromosome));
         }
@@ -68,13 +66,13 @@ public class GeneticAlgorithm {
         // Мутанты
         while (nextGeneration.size() < ELITE_COUNT + CROSSOVER_COUNT + MUTANT_COUNT) {
             Individual base = currentPopulation.get(RANDOM.nextInt(size)); // может быть не из элиты
-            int[] mutated = GeneticFunctions.mutate(base.getChromosome());
+            Chromosome mutated = GeneticFunctions.mutate(base.getChromosome());
             nextGeneration.add(new Individual(mutated));
         }
 
         // Случайные иммигранты
         while (nextGeneration.size() < size) {
-            nextGeneration.add(new Individual(generateChromosome()));
+            nextGeneration.add(new Individual(new Chromosome()));
         }
 
         return nextGeneration;
@@ -91,11 +89,9 @@ public class GeneticAlgorithm {
 
         } catch (IllegalStateException e) {
 //            if (DEBUG) {
-            System.out.println("Invalid chromosome " + Arrays.toString(ind.getChromosome()) + " → regenerating");
+            System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
 //            }
-
-            int[] newChromosome = generateChromosome();
-            ind.setChromosome(newChromosome);
+            ind.setChromosome(new Chromosome());
             return evaluateFitness(ind, imagesTrain, imagesTest);
         }
     }

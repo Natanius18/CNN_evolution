@@ -5,6 +5,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.INPUT_ROWS;
 
 import java.util.ArrayList;
 import java.util.List;
+import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.layers.ConvolutionLayer;
 import natanius.thesis.cnn.evolution.layers.FullyConnectedLayer;
 import natanius.thesis.cnn.evolution.layers.Layer;
@@ -45,16 +46,16 @@ public class NetworkBuilder {
     }
 
 
-    public NetworkBuilder addFullyConnectedLayer(double learningRate) {
+    public NetworkBuilder addFullyConnectedLayer(double learningRate, Activation activation) {
         if (layers.isEmpty()) {
-            layers.add(new FullyConnectedLayer(INPUT_COLS * INPUT_ROWS, learningRate));
+            layers.add(new FullyConnectedLayer(activation, INPUT_COLS * INPUT_ROWS, learningRate));
         } else {
             Layer prev = layers.getLast();
             int inputElements = prev.getOutputElements();
             if (inputElements <= 0) {
                 throw new IllegalStateException("Cannot add fully connected layer: previous layer output is invalid");
             }
-            layers.add(new FullyConnectedLayer(inputElements, learningRate));
+            layers.add(new FullyConnectedLayer(activation, inputElements, learningRate));
         }
 
         return this;

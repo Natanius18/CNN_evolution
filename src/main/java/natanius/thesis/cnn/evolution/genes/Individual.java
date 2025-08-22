@@ -1,7 +1,6 @@
 package natanius.thesis.cnn.evolution.genes;
 
 
-import java.util.Arrays;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,16 +9,16 @@ import lombok.Setter;
 public class Individual {
 
     private float fitness;
-    private int[] chromosome;
+    private Chromosome chromosome;
 
-    public Individual(int[] chromosome) {
+    public Individual(Chromosome chromosome) {
         this.chromosome = chromosome;
         this.fitness = Float.MAX_VALUE; // по умолчанию — наихудшее значение
     }
 
     @Override
     public String toString() {
-        return "Individual: [Chromosome: " + Arrays.toString(chromosome) + ", Fitness: " + fitness + "]";
+        return "Individual: {" + chromosome + ", Fitness: " + fitness + "}";
     }
 }
 
