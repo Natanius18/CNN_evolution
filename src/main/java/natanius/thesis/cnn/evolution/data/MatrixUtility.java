@@ -6,10 +6,11 @@ import lombok.experimental.UtilityClass;
 public class MatrixUtility {
 
     public static void add(double[][] a, double[][] b) {
-        for (int i = 0; i < a.length; i++) {
+        int length = a.length;
+        for (int i = 0; i < length; i++) {
             double[] aRow = a[i];
             double[] bRow = b[i];
-            for (int j = 0; j < aRow.length; j++) {
+            for (int j = 0; j < length; j++) {
                 aRow[j] += bRow[j];
             }
         }
@@ -22,9 +23,10 @@ public class MatrixUtility {
     }
 
     public static void multiply(double[][] a, double scalar) {
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a[i].length; j++) {
-                a[i][j] *= scalar;
+        int length = a.length;
+        for (double[] row : a) {
+            for (int j = 0; j < length; j++) {
+                row[j] *= scalar;
             }
         }
     }
