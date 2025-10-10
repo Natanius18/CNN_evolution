@@ -6,12 +6,17 @@ import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import java.io.Serializable;
 import java.util.List;
 import natanius.thesis.cnn.evolution.activation.Activation;
+import natanius.thesis.cnn.evolution.activation.LeakyReLU;
+import natanius.thesis.cnn.evolution.activation.ReLU;
+import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
 public class FullyConnectedLayer extends Layer implements Serializable {
 
     private final Activation activation;
 
     private final double[][] weights;
+    private final double[] biases;
+
     private final int inLength;
     private final double learningRate;
 
@@ -25,28 +30,47 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         this.learningRate = learningRate;
 
         weights = new double[inLength][OUTPUT_CLASSES];
-        setRandomWeights();
+        if (activation instanceof ReLU || activation instanceof LeakyReLU) {
+            initWeightsHe();
+        } else if (activation instanceof Sigmoid) {
+            initWeightsXavier();
+        }
+
+        biases = new double[OUTPUT_CLASSES];
+
     }
 
     public double[] fullyConnectedForwardPass(double[] input) {
+        validateInput(input);
 
         lastX = input;
-
-        double[] z = new double[OUTPUT_CLASSES];
-        double[] out = new double[OUTPUT_CLASSES];
+        double[] z = biases.clone();
 
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                z[j] += input[i] * weights[i][j];
+            double xi = input[i];
+            if (xi != 0.0) { // если xi == 0, то все произведения будут 0
+                double[] wRow = weights[i];
+                for (int j = 0; j < OUTPUT_CLASSES; j++) {
+                    z[j] += xi * wRow[j];
+                }
             }
         }
 
         lastZ = z;
+        return applyActivation(z);
+    }
 
+    private void validateInput(double[] input) {
+        if (input.length != inLength) {
+            throw new IllegalArgumentException("Expected input length " + inLength + ", got " + input.length);
+        }
+    }
+
+    private double[] applyActivation(double[] z) {
+        double[] out = new double[OUTPUT_CLASSES];
         for (int j = 0; j < OUTPUT_CLASSES; j++) {
             out[j] = activation.forward(z[j]);
         }
-
         return out;
     }
 
@@ -60,41 +84,40 @@ public class FullyConnectedLayer extends Layer implements Serializable {
     public double[] getOutput(double[] input) {
         double[] forwardPass = fullyConnectedForwardPass(input);
 
-        if (nextLayer != null) {
-            return nextLayer.getOutput(forwardPass);
-        } else {
-            return forwardPass;
-        }
+        return nextLayer == null ? forwardPass : nextLayer.getOutput(forwardPass);
     }
 
     @Override
     public void backPropagation(double[] dLdO) {
+        // 1) dZ = dL/dO ⊙ f'(Z)
+        double[] dZ = new double[OUTPUT_CLASSES];
+        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            dZ[j] = dLdO[j] * activation.backward(lastZ[j]);
+        }
 
+        // 2) dL/dX = W * dZ  (используем СТАРЫЕ веса)
         double[] dLdX = new double[inLength];
-
-        double dOdz;
-        double dzdw;
-        double dLdw;
-        double dzdx;
-
-        for (int k = 0; k < inLength; k++) {
-
-            double dLdXsum = 0;
-
+        for (int i = 0; i < inLength; i++) {
+            double sum = 0.0;
+            double[] wRow = weights[i];
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
-
-                dOdz = activation.backward(lastZ[j]);
-                dzdw = lastX[k];
-                dzdx = weights[k][j];
-
-                dLdw = dLdO[j] * dOdz * dzdw;
-
-                weights[k][j] -= dLdw * learningRate;
-
-                dLdXsum += dLdO[j] * dOdz * dzdx;
+                sum += wRow[j] * dZ[j];
             }
+            dLdX[i] = sum;
+        }
 
-            dLdX[k] = dLdXsum;
+        // 3) обновление весов: dL/dW_ij = X_i * dZ_j
+        for (int i = 0; i < inLength; i++) {
+            double xi = lastX[i];
+            double[] wRow = weights[i];
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+                wRow[j] -= learningRate * (xi * dZ[j]);
+            }
+        }
+
+        // 4) обновление bias: dL/db_j = dZ_j
+        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            biases[j] -= learningRate * dZ[j];
         }
 
         if (previousLayer != null) {
@@ -110,7 +133,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
     @Override
     public int getOutputLength() {
-        return 0;
+        return OUTPUT_CLASSES;
     }
 
     @Override
@@ -130,7 +153,7 @@ public class FullyConnectedLayer extends Layer implements Serializable {
 
     @Override
     public int getParameterCount() {
-        return inLength * OUTPUT_CLASSES;  // Weight matrix size
+        return inLength * OUTPUT_CLASSES + OUTPUT_CLASSES;  // Weight matrix size + bias
     }
 
     @Override
@@ -140,10 +163,20 @@ public class FullyConnectedLayer extends Layer implements Serializable {
     }
 
 
-    public void setRandomWeights() {
+    private void initWeightsHe() {
+        double std = Math.sqrt(2.0 / inLength);
         for (int i = 0; i < inLength; i++) {
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                weights[i][j] = RANDOM.nextGaussian();
+                weights[i][j] = RANDOM.nextGaussian() * std;
+            }
+        }
+    }
+
+    private void initWeightsXavier() {
+        double limit = Math.sqrt(6.0 / (inLength + OUTPUT_CLASSES));
+        for (int i = 0; i < inLength; i++) {
+            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+                weights[i][j] = (RANDOM.nextDouble() * 2 - 1) * limit;
             }
         }
     }
