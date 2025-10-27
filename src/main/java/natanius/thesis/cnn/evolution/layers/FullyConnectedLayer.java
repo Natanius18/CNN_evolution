@@ -20,8 +20,8 @@ public class FullyConnectedLayer extends Layer implements Serializable {
     private final int inLength;
     private final double learningRate;
 
-    private double[] lastZ;
-    private double[] lastX;
+    private double[] lastZ;  //  містить зважені суми до застосування функції активації
+    private double[] lastX;  // зберiгає вхiднi данi шару
 
 
     public FullyConnectedLayer(Activation activation, int inLength, double learningRate) {
@@ -36,27 +36,70 @@ public class FullyConnectedLayer extends Layer implements Serializable {
             initWeightsXavier();
         }
 
-        biases = new double[OUTPUT_CLASSES];
+        biases = new double[OUTPUT_CLASSES];  // default init with zeros
 
     }
 
+
+    /**
+     * Реалізує прямий прохід (forward propagation) через повнозв'язний шар.
+     *
+     * <p><b>Математичні позначення:</b>
+     * <ul>
+     *   <li>input = a^(l-1) — активації попереднього шару (вхід поточного шару)</li>
+     *   <li>weights = W^(l) — матриця ваг поточного шару</li>
+     *   <li>biases = b^(l) — вектор зміщень поточного шару</li>
+     *   <li>z = z^(l) — зважена сума (перед активацією)</li>
+     *   <li>a = a^(l) — активації після застосування функції активації</li>
+     * </ul>
+     *
+     * <p><b>Крок 1:</b> Обчислення зваженої суми:
+     * <pre>
+     *   z^(l) = W^(l) · a^(l-1) + b^(l)
+     * </pre>
+     * де · означає матричне множення (у коді: weights[i][j] * input[i]).
+     *
+     * <p><b>Крок 2:</b> Застосування функції активації:
+     * <pre>
+     *   a^(l) = f^(l)(z^(l))
+     * </pre>
+     * де f^(l) — функція активації шару (ReLU, Sigmoid тощо).
+     *
+     * <p><b>Оптимізація:</b> Під час обчислення z пропускаються нульові елементи input[i],
+     * що особливо ефективно після ReLU активації або pooling операцій.
+     *
+     * <p><b>Збереження для backpropagation:</b>
+     * <ul>
+     *   <li>lastX = a^(l-1) — вхідні активації</li>
+     *   <li>lastZ = z^(l) — зважена сума перед активацією</li>
+     * </ul>
+     *
+     * @param input вектор a^(l-1) — активації попереднього шару
+     * @return вектор a^(l) — активації поточного шару після застосування f^(l)
+     */
     public double[] fullyConnectedForwardPass(double[] input) {
         validateInput(input);
 
-        lastX = input;
+        // Збереження a^(l-1) для backpropagation
+        lastX = input.clone();
+
+        // Ініціалізація z^(l) = b^(l)
         double[] z = biases.clone();
 
+        // Обчислення z^(l) = W^(l) · a^(l-1) + b^(l)
         for (int i = 0; i < inLength; i++) {
-            double xi = input[i];
-            if (xi != 0.0) { // если xi == 0, то все произведения будут 0
+            double aPrevI = input[i];  // a^(l-1)_i
+
+            if (aPrevI != 0.0) {
                 double[] wRow = weights[i];
+
                 for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                    z[j] += xi * wRow[j];
+                    z[j] += wRow[j] * aPrevI;  // z^(l)_j += W^(l)_ij · a^(l-1)_i
                 }
             }
         }
-
         lastZ = z;
+
         return applyActivation(z);
     }
 
@@ -66,12 +109,18 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         }
     }
 
+    /**
+     * Застосовує функцію активації f^(l) до кожного елемента вектора z^(l).
+     *
+     * @param z вектор z^(l) — зважена сума
+     * @return вектор a^(l) = f^(l)(z^(l)) — активації після застосування функції
+     */
     private double[] applyActivation(double[] z) {
-        double[] out = new double[OUTPUT_CLASSES];
+        double[] a = new double[OUTPUT_CLASSES];
         for (int j = 0; j < OUTPUT_CLASSES; j++) {
-            out[j] = activation.forward(z[j]);
+            a[j] = activation.forward(z[j]);
         }
-        return out;
+        return a;
     }
 
     @Override
@@ -87,43 +136,102 @@ public class FullyConnectedLayer extends Layer implements Serializable {
         return nextLayer == null ? forwardPass : nextLayer.getOutput(forwardPass);
     }
 
+    /**
+     * Реалізує алгоритм зворотного поширення помилки (backpropagation) через повнозв'язний шар.
+     * Процес складається з чотирьох етапів: обчислення локальної похибки, обчислення градієнта
+     * для попереднього шару, оновлення ваг та оновлення зміщень.
+     *
+     * <p><b>Математичні позначення:</b>
+     * <ul>
+     *   <li>dLda = ∂L/∂a^(l) — градієнт втрат відносно виходу шару (вхідний параметр)</li>
+     *   <li>delta = δ^(l) — локальна похибка шару</li>
+     *   <li>dLdX = ∂L/∂a^(l-1) — градієнт втрат відносно входу шару</li>
+     *   <li>lastZ = z^(l) — зважена сума перед активацією (збережена з forward pass)</li>
+     *   <li>lastX = a^(l-1) — активації попереднього шару (збережені з forward pass)</li>
+     *   <li>weights = W^(l) — матриця ваг</li>
+     *   <li>biases = b^(l) — вектор зміщень</li>
+     * </ul>
+     *
+     * <p><b>ЕТАП 1: Обчислення локальної похибки</b>
+     * <pre>
+     *   δ^(l) = ∂L/∂a^(l) ⊙ f'(z^(l))
+     * </pre>
+     * де ⊙ — поелементне множення (Hadamard product), f' — похідна функції активації.
+     * <p>
+     *
+     * <p><b>ЕТАП 2: Обчислення градієнта для попереднього шару</b>
+     * <pre>
+     *   ∂L/∂a^(l-1) = (W^(l))^T · δ^(l)
+     * </pre>
+     * Цей градієнт передається попередньому шару для продовження backpropagation.
+     * <p>
+     *
+     * <p><b>ЕТАП 3: Обчислення градієнтів параметрів</b>
+     * <pre>
+     *   ∂L/∂W^(l)_ij = a^(l-1)_i · δ^(l)_j
+     *   ∂L/∂b^(l)_j = δ^(l)_j
+     * </pre>
+     * <p>
+     *
+     * <p><b>ЕТАП 4: Оновлення параметрів методом градієнтного спуску</b>
+     * <pre>
+     *   W^(l) := W^(l) - η · ∂L/∂W^(l)
+     *   b^(l) := b^(l) - η · ∂L/∂b^(l)
+     * </pre>
+     * де η — швидкість навчання (learning rate).
+     *
+     * <p><b>ВАЖЛИВО:</b> Градієнт dLdX обчислюється ДО оновлення ваг, використовуючи
+     * старі значення параметрів. Це критично для коректності backpropagation через весь ланцюг шарів.
+     *
+     * @param dLda градієнт функції втрат відносно виходу шару (∂L/∂a^(l))
+     */
     @Override
-    public void backPropagation(double[] dLdO) {
-        // 1) dZ = dL/dO ⊙ f'(Z)
-        double[] dZ = new double[OUTPUT_CLASSES];
+    public void backPropagation(double[] dLda) {
+        // ЕТАП 1: Обчислення локальної похибки δ^(l)
+        // δ^(l) = ∂L/∂a^(l) ⊙ f'(z^(l))
+        double[] delta = new double[OUTPUT_CLASSES];
         for (int j = 0; j < OUTPUT_CLASSES; j++) {
-            dZ[j] = dLdO[j] * activation.backward(lastZ[j]);
+            delta[j] = dLda[j] * activation.backward(lastZ[j]);
         }
 
-        // 2) dL/dX = W * dZ  (используем СТАРЫЕ веса)
-        double[] dLdX = new double[inLength];
+        // ЕТАП 2: Обчислення градієнта для попереднього шару
+        // ∂L/∂a^(l-1) = (W^(l))^T · δ^(l)
+        // ВАЖЛИВО: використовуємо СТАРІ значення ваг (до оновлення)
+        double[] dLdaPrev = new double[inLength];
         for (int i = 0; i < inLength; i++) {
             double sum = 0.0;
-            double[] wRow = weights[i];
+            double[] wRow = weights[i];  // i-й рядок матриці W^(l)
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                sum += wRow[j] * dZ[j];
+                sum += wRow[j] * delta[j];  // W^(l)_ij · δ^(l)_j
             }
-            dLdX[i] = sum;
+            dLdaPrev[i] = sum;
         }
 
-        // 3) обновление весов: dL/dW_ij = X_i * dZ_j
+        // ЕТАП 3: Оновлення ваг
+        // W^(l)_ij := W^(l)_ij - η · ∂L/∂W^(l)_ij
+        // де ∂L/∂W^(l)_ij = a^(l-1)_i · δ^(l)_j
         for (int i = 0; i < inLength; i++) {
-            double xi = lastX[i];
+            double aPrevI = lastX[i];  // a^(l-1)_i
             double[] wRow = weights[i];
             for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                wRow[j] -= learningRate * (xi * dZ[j]);
+                double dLdWij = aPrevI * delta[j];
+                wRow[j] -= learningRate * dLdWij;
             }
         }
 
-        // 4) обновление bias: dL/db_j = dZ_j
+        // ЕТАП 4: Оновлення зміщень
+        // b^(l)_j := b^(l)_j - η · ∂L/∂b^(l)_j
+        // де ∂L/∂b^(l)_j = δ^(l)_j
         for (int j = 0; j < OUTPUT_CLASSES; j++) {
-            biases[j] -= learningRate * dZ[j];
+            biases[j] -= learningRate * delta[j];
         }
 
+        // Рекурсивне поширення помилки на попередній шар
         if (previousLayer != null) {
-            previousLayer.backPropagation(dLdX);
+            previousLayer.backPropagation(dLdaPrev);
         }
     }
+
 
     @Override
     public void backPropagation(List<double[][]> dLdO) {
