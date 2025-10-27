@@ -2,21 +2,25 @@ package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
+import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
-import static natanius.thesis.cnn.evolution.data.Constants.TRAIN_AND_SAVE_BEST_MODEL;
+import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
+import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateInitialPopulation;
 
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import natanius.thesis.cnn.evolution.data.ExcelLogger;
 import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.genes.GeneticAlgorithm;
 import natanius.thesis.cnn.evolution.genes.Individual;
-import natanius.thesis.cnn.evolution.network.ExperimentalSandbox;
+import natanius.thesis.cnn.evolution.layers.Layer;
+import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class Evolution {
 
@@ -24,15 +28,16 @@ public class Evolution {
         GeneticAlgorithm ga = new GeneticAlgorithm();
 
         List<Individual> population = generateInitialPopulation();
-        ExperimentalSandbox sandbox = new ExperimentalSandbox();
-        List<Image> imagesTrain = sandbox.getImagesTrain();
-        List<Image> imagesTest = sandbox.getImagesTest();
+        List<Image> imagesTrain = loadTrainData();
+        List<Image> imagesTest = loadTestData();
         if (FAST_MODE) {
             imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
-            imagesTest =  imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
+            imagesTest = imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
             System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
         }
 
+        List<Image> validationSet = imagesTrain.subList(0, imagesTrain.size() / 10);
+        List<Image> trainSet = imagesTrain.subList(imagesTrain.size() / 10, imagesTrain.size());
         for (int gen = 0; gen < GENERATIONS; gen++) {
             long start = now().getEpochSecond();
             System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
@@ -41,8 +46,7 @@ public class Evolution {
             }
 
 
-
-            population = ga.evolve(population, imagesTrain, imagesTest);
+            population = ga.evolve(population, trainSet, validationSet);
 
             // Найдём лучшую архитектуру
             Individual best = population.stream()
@@ -50,15 +54,26 @@ public class Evolution {
                 .orElseThrow();
 
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
+            NeuralNetwork neuralNetwork = buildNetworkFromChromosome(best.getChromosome());
+            neuralNetwork.train(imagesTrain, BATCH_SIZE);
+            float trainAccuracy = neuralNetwork.test(trainSet);
+            float testAccuracy = neuralNetwork.test(imagesTest);
+
+
             if (DEBUG) {
-                System.out.println(buildNetworkFromChromosome(best.getChromosome()));
+                System.out.println(neuralNetwork);
             }
+
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);
 
-            if (TRAIN_AND_SAVE_BEST_MODEL) {
-//                sandbox.train(gen, buildNetworkFromChromosome(best.getChromosome()), best.getChromosome());
-            }
+            int totalParams = neuralNetwork.getLayers().stream()
+                .map(Layer::getParameterCount)
+                .reduce(Integer::sum).orElseThrow();
+
+            ExcelLogger.saveResults(testAccuracy, trainAccuracy, totalParams, trainingTime, best.getChromosome().toString());
+
+            //     new Thread(new FormDigits(neuralNetwork)).start();
         }
     }
 

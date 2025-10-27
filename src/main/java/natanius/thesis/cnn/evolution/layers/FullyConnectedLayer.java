@@ -3,14 +3,13 @@ package natanius.thesis.cnn.evolution.layers;
 import static natanius.thesis.cnn.evolution.data.Constants.OUTPUT_CLASSES;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
-import java.io.Serializable;
 import java.util.List;
 import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.activation.LeakyReLU;
 import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
-public class FullyConnectedLayer extends Layer implements Serializable {
+public class FullyConnectedLayer extends Layer {
 
     private final Activation activation;
 

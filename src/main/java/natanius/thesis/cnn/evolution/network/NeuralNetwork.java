@@ -4,7 +4,6 @@ import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -14,7 +13,7 @@ import natanius.thesis.cnn.evolution.layers.FullyConnectedLayer;
 import natanius.thesis.cnn.evolution.layers.Layer;
 import natanius.thesis.cnn.evolution.layers.MaxPoolLayer;
 
-public class NeuralNetwork implements Serializable {
+public class NeuralNetwork {
     @Getter
     private final List<Layer> layers;
 

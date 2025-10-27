@@ -18,14 +18,14 @@ public class Constants {
     public static final int INPUT_COLS = 28;
     public static final int OUTPUT_CLASSES = 10;
     public static final int SCALE_FACTOR = 25600;
-    public final static double LEAK = 0.01;
-    public static final int[] ALLOWED_FILTER_SIZES = {7}; //, 5, 7};
-    public static final int[] ALLOWED_FILTERS = {4, 16}; //, 8, 16, 32, 64};
+    public static final double LEAK = 0.01;
+    public static final int[] ALLOWED_FILTER_SIZES = {3, 5, 7};
+    public static final int[] ALLOWED_FILTERS = {4, 8, 16}; //, 32, 64};
     public static final Activation[] ACTIVATION_STRATEGIES = {new ReLU(), new LeakyReLU(), new Sigmoid()};
 
     // Parameters to optimize later
     public static final int CONV_LAYERS = 2;
-    public static final int BATCH_SIZE = 3;
+    public static final int BATCH_SIZE = 10;
     public static final int CONV_STEP_SIZE = 1;
     public static final float LEARNING_RATE = 0.3f;
     public static final int MAX_POOL_STEP_SIZE = 2;
@@ -38,11 +38,10 @@ public class Constants {
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
-    public static final float DATASET_FRACTION = 0.01f;
+    public static final float DATASET_FRACTION = 0.1f;
 
 
     public static final int EPOCHS = 5;
     public static final boolean FAST_MODE = true;
-    public static final boolean TRAIN_AND_SAVE_BEST_MODEL = false;
     public static final boolean DEBUG = false;
 }

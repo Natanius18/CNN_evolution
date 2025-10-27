@@ -96,7 +96,8 @@ public class GeneticFunctions {
                 filters,
                 filterSize,
                 CONV_STEP_SIZE,
-                LEARNING_RATE
+                LEARNING_RATE,
+                chromosome.getActivation()
             ).addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
         }
 

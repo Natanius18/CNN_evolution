@@ -4,11 +4,11 @@ import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import natanius.thesis.cnn.evolution.activation.Activation;
 
-public class ConvolutionLayer extends Layer implements Serializable {
+public class ConvolutionLayer extends Layer {
 
     private final int filterSize;
     private final int stepSize;
@@ -18,14 +18,16 @@ public class ConvolutionLayer extends Layer implements Serializable {
     private final double learningRate;
     private List<double[][]> filters;
     private List<double[][]> lastInput;
+    private final Activation activation;
 
-    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, int numFilters, double learningRate) {
+    public ConvolutionLayer(int filterSize, int stepSize, int inLength, int inRows, int inCols, int numFilters, double learningRate, Activation activation) {
         this.filterSize = filterSize;
         this.stepSize = stepSize;
         this.inLength = inLength;
         this.inRows = inRows;
         this.inCols = inCols;
         this.learningRate = learningRate;
+        this.activation = activation;
 
         generateRandomFilters(numFilters);
 
@@ -104,6 +106,7 @@ public class ConvolutionLayer extends Layer implements Serializable {
                     }
                 }
 
+//                output[outRow][outCol] = activation.forward(sum);
                 output[outRow][outCol] = sum;
                 outCol++;
             }

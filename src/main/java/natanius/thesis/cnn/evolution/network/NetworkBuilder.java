@@ -16,15 +16,29 @@ public class NetworkBuilder {
     private final List<Layer> layers = new ArrayList<>();
 
 
-    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate) {
+    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, Activation activation) {
         if (layers.isEmpty()) {
-            layers.add(new ConvolutionLayer(filterSize, stepSize, 1, INPUT_ROWS, INPUT_COLS, numFilters, learningRate));
+            layers.add(new ConvolutionLayer(filterSize,
+                stepSize,
+                1,
+                INPUT_ROWS,
+                INPUT_COLS,
+                numFilters,
+                learningRate,
+                activation));
         } else {
             Layer prev = layers.getLast();
             if (prev.getOutputRows() < filterSize || prev.getOutputCols() < filterSize) {
                 throw new IllegalStateException("Output too small for filter size " + filterSize);
             }
-            layers.add(new ConvolutionLayer(filterSize, stepSize, prev.getOutputLength(), prev.getOutputRows(), prev.getOutputCols(), numFilters, learningRate));
+            layers.add(new ConvolutionLayer(filterSize,
+                stepSize,
+                prev.getOutputLength(),
+                prev.getOutputRows(),
+                prev.getOutputCols(),
+                numFilters,
+                learningRate,
+                activation));
         }
         return this;
     }
