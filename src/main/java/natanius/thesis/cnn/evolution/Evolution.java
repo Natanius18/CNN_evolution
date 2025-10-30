@@ -2,6 +2,8 @@ package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
+import static natanius.thesis.cnn.evolution.OverfitTest.testOverfitting;
+import static natanius.thesis.cnn.evolution.WeightUpdateTest.testWeightUpdates;
 import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
@@ -28,6 +30,8 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class Evolution {
 
+    private static final int MODE = 2;
+
     public static void main(String[] args) {
 
         List<Image> imagesTrain = loadTrainData();
@@ -38,21 +42,24 @@ public class Evolution {
             System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
         }
 
-
-//        runGeneticAlgorithm(imagesTrain, imagesTest);
-//        testOneNetwork(imagesTrain, imagesTest);
-//        OverfitTest.testOverfitting(imagesTrain);
-        WeightUpdateTest.testWeightUpdates(imagesTrain);
-
+        if (MODE == 1) {
+            testOneNetwork(imagesTrain, imagesTest);
+        } else if (MODE == 2) {
+            runGeneticAlgorithm(imagesTrain, imagesTest);
+        } else if (MODE == 3) {
+            testOverfitting(imagesTrain);
+        } else if (MODE == 4) {
+            testWeightUpdates(imagesTrain);
+        }
     }
 
     private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
         NeuralNetwork network = new NetworkBuilder()
-            .addConvolutionLayer(16, 3, 1, 0.001, new ReLU(), 1)  // Больше фильтров
+            .addConvolutionLayer(4, 3, 1, 0.001, new ReLU(), 0)  // Больше фильтров
             .addMaxPoolLayer(2, 2)
-            .addConvolutionLayer(32, 3, 1, 0.001, new ReLU(), 1)  // Второй conv слой
+            .addConvolutionLayer(4, 3, 1, 0.001, new ReLU(), 0)  // Второй conv слой
             .addMaxPoolLayer(2, 2)
-            .addFullyConnectedLayer(0.001, new Linear())  // Linear на выходе
+            .addFullyConnectedLayer(0.001, new Linear())
             .build();
 
         EpochTrainer epochTrainer = new EpochTrainer();

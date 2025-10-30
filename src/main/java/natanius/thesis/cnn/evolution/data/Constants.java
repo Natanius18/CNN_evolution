@@ -27,10 +27,17 @@ public class Constants {
     public static final int CONV_LAYERS = 2;
     public static final int BATCH_SIZE = 1;
     public static final int CONV_STEP_SIZE = 1;
-    public static final float LEARNING_RATE = 0.1f;
+    public static double getLearningRate(Activation activation) {
+        if (activation instanceof Sigmoid) {
+            return 0.01;
+        } else {
+            return 0.001;
+        }
+    }
+
     public static final int MAX_POOL_STEP_SIZE = 2;
     public static final int MAX_POOL_WINDOW_SIZE = 2;
-    public static final double LEARNING_RATE_FULLY_CONNECTED = 0.1;
+    public static final double LEARNING_RATE_FULLY_CONNECTED = 0.001;
 
     // Evolution-related parameters
     public static final int POPULATION_SIZE = 40;

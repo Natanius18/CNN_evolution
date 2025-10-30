@@ -6,11 +6,11 @@ import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
-import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
 import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_WINDOW_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
+import static natanius.thesis.cnn.evolution.data.Constants.getLearningRate;
 
 import java.util.Arrays;
 import natanius.thesis.cnn.evolution.activation.Linear;
@@ -93,13 +93,15 @@ public class GeneticFunctions {
             int filters = chromosome.getNumFilters()[i];
             int filterSize = chromosome.getFilterSizes()[i];
 
+            int padding = filterSize / 2;
+
             builder.addConvolutionLayer(
                 filters,
                 filterSize,
                 CONV_STEP_SIZE,
-                LEARNING_RATE,
+                getLearningRate(chromosome.getActivation()),
                 chromosome.getActivation(),
-                0 //todo
+                padding //todo
             ).addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
         }
 

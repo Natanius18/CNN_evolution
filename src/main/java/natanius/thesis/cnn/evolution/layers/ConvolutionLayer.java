@@ -84,7 +84,7 @@ public class ConvolutionLayer extends Layer {
      */
     private void initFiltersHe(int numFilters) {
         // Обчислюємо стандартне відхилення один раз
-        int fanIn = filterSize * filterSize;
+        int fanIn = filterSize * filterSize * inLength;
         double std = Math.sqrt(2.0 / fanIn);
 
         for (int n = 0; n < numFilters; n++) {
@@ -110,9 +110,9 @@ public class ConvolutionLayer extends Layer {
      * @see <a href="http://proceedings.mlr.press/v9/glorot10a.html">Glorot & Bengio, 2010</a>
      */
     private void initFiltersXavier(int numFilters) {
-        // Обчислюємо limit один раз
-        int fanIn = filterSize * filterSize;
-        int fanOut = filterSize * filterSize * numFilters;
+        // ✓ ПРАВИЛЬНО для Conv2D:
+        int fanIn = filterSize * filterSize * inLength;
+        int fanOut = numFilters;
         double limit = Math.sqrt(6.0 / (fanIn + fanOut));
 
         for (int n = 0; n < numFilters; n++) {
@@ -120,7 +120,6 @@ public class ConvolutionLayer extends Layer {
 
             for (int i = 0; i < filterSize; i++) {
                 for (int j = 0; j < filterSize; j++) {
-                    // Рівномірний розподіл U(-limit, +limit)
                     newFilter[i][j] = (RANDOM.nextDouble() * 2 - 1) * limit;
                 }
             }
@@ -128,6 +127,7 @@ public class ConvolutionLayer extends Layer {
             filters.add(newFilter);
         }
     }
+
 
 
     @Override
