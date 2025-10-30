@@ -13,6 +13,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_WINDOW_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.util.Arrays;
+import natanius.thesis.cnn.evolution.activation.Linear;
 import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
@@ -97,7 +98,8 @@ public class GeneticFunctions {
                 filterSize,
                 CONV_STEP_SIZE,
                 LEARNING_RATE,
-                chromosome.getActivation()
+                chromosome.getActivation(),
+                0 //todo
             ).addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
         }
 
@@ -105,7 +107,7 @@ public class GeneticFunctions {
         return builder
             .addFullyConnectedLayer(
                 LEARNING_RATE_FULLY_CONNECTED,
-                chromosome.getActivation()
+                new Linear()
             )
             .build();
     }

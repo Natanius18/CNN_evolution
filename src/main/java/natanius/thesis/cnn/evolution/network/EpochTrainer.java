@@ -6,14 +6,12 @@ import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
-import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import natanius.thesis.cnn.evolution.data.Image;
 
 @Getter
 public class EpochTrainer {
-    private final List<ModelRecord> modelRecords = new ArrayList<>();
 
     public float train(NeuralNetwork neuralNetwork, List<Image> imagesTrain, List<Image> imagesTest) {
         float accuracy = 0;

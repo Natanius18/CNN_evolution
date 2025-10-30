@@ -1,7 +1,6 @@
 package natanius.thesis.cnn.evolution.network;
 
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
-import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
 import java.util.ArrayList;
@@ -51,14 +50,14 @@ public class NeuralNetwork {
 
     public double[] getErrors(double[] networkOutput, int correctAnswer) {
         int numClasses = networkOutput.length;
-
         double[] expected = new double[numClasses];
-
         expected[correctAnswer] = 1;
-        multiply(expected, -1);
 
-        add(networkOutput, expected);
-        return networkOutput;
+        double[] errors = new double[numClasses];
+        for (int i = 0; i < numClasses; i++) {
+            errors[i] = networkOutput[i] - expected[i];  // output - target
+        }
+        return errors;
     }
 
     private int getMaxIndex(double[] in) {

@@ -16,10 +16,11 @@ public class NetworkBuilder {
     private final List<Layer> layers = new ArrayList<>();
 
 
-    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, Activation activation) {
+    public NetworkBuilder addConvolutionLayer(int numFilters, int filterSize, int stepSize, double learningRate, Activation activation, int padding) {
         if (layers.isEmpty()) {
             layers.add(new ConvolutionLayer(filterSize,
                 stepSize,
+                padding,
                 1,
                 INPUT_ROWS,
                 INPUT_COLS,
@@ -33,6 +34,7 @@ public class NetworkBuilder {
             }
             layers.add(new ConvolutionLayer(filterSize,
                 stepSize,
+                padding,
                 prev.getOutputLength(),
                 prev.getOutputRows(),
                 prev.getOutputCols(),

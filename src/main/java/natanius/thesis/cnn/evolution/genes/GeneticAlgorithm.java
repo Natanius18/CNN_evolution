@@ -1,6 +1,7 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static java.lang.Math.floorDiv;
+import static java.time.Instant.now;
 import static java.util.Comparator.comparingDouble;
 import static natanius.thesis.cnn.evolution.data.Constants.CROSSOVER_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.ELITE_COUNT;
@@ -80,17 +81,15 @@ public class GeneticAlgorithm {
 
     private float evaluateFitness(Individual ind, List<Image> imagesTrain, List<Image> imagesTest) {
         try {
-//            long start = now().getEpochSecond();
+            long start = now().getEpochSecond();
             NeuralNetwork network = buildNetworkFromChromosome(ind.getChromosome());
             float accuracy = epochTrainer.train(network, imagesTrain, imagesTest);
-//            long trainingTime = now().getEpochSecond() - start;
-//            printTimeTaken(trainingTime);
+            long trainingTime = now().getEpochSecond() - start;
+            printTimeTaken(trainingTime);
             return 100f - accuracy * 100f;  // чем меньше — тем лучше
 
         } catch (IllegalStateException e) {
-//            if (DEBUG) {
             System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
-//            }
             ind.setChromosome(new Chromosome());
             return evaluateFitness(ind, imagesTrain, imagesTest);
         }

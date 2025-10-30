@@ -15,19 +15,21 @@ import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateIn
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import natanius.thesis.cnn.evolution.activation.Linear;
+import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.data.ExcelLogger;
 import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.genes.GeneticAlgorithm;
 import natanius.thesis.cnn.evolution.genes.Individual;
 import natanius.thesis.cnn.evolution.layers.Layer;
+import natanius.thesis.cnn.evolution.network.EpochTrainer;
+import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
 public class Evolution {
 
     public static void main(String[] args) {
-        GeneticAlgorithm ga = new GeneticAlgorithm();
 
-        List<Individual> population = generateInitialPopulation();
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
         if (FAST_MODE) {
@@ -35,6 +37,39 @@ public class Evolution {
             imagesTest = imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
             System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
         }
+
+
+//        runGeneticAlgorithm(imagesTrain, imagesTest);
+//        testOneNetwork(imagesTrain, imagesTest);
+//        OverfitTest.testOverfitting(imagesTrain);
+        WeightUpdateTest.testWeightUpdates(imagesTrain);
+
+    }
+
+    private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
+        NeuralNetwork network = new NetworkBuilder()
+            .addConvolutionLayer(16, 3, 1, 0.001, new ReLU(), 1)  // Больше фильтров
+            .addMaxPoolLayer(2, 2)
+            .addConvolutionLayer(32, 3, 1, 0.001, new ReLU(), 1)  // Второй conv слой
+            .addMaxPoolLayer(2, 2)
+            .addFullyConnectedLayer(0.001, new Linear())  // Linear на выходе
+            .build();
+
+        EpochTrainer epochTrainer = new EpochTrainer();
+        epochTrainer.train(network, imagesTrain, imagesTest);
+
+        for (int epoch = 1; epoch <= 10; epoch++) {
+            network.train(imagesTrain, 100);
+            float accuracy = network.test(imagesTest);
+            System.out.printf("Epoch %d: Test Accuracy = %.2f%%%n", epoch, accuracy);
+        }
+    }
+
+    private static void runGeneticAlgorithm(List<Image> imagesTrain, List<Image> imagesTest) {
+        GeneticAlgorithm ga = new GeneticAlgorithm();
+
+        List<Individual> population = generateInitialPopulation();
+
 
         List<Image> validationSet = imagesTrain.subList(0, imagesTrain.size() / 10);
         List<Image> trainSet = imagesTrain.subList(imagesTrain.size() / 10, imagesTrain.size());

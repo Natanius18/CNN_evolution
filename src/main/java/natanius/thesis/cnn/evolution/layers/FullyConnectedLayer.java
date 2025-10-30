@@ -4,11 +4,14 @@ import static natanius.thesis.cnn.evolution.data.Constants.OUTPUT_CLASSES;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.util.List;
+import lombok.Getter;
 import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.activation.LeakyReLU;
+import natanius.thesis.cnn.evolution.activation.Linear;
 import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
+@Getter // todo remove
 public class FullyConnectedLayer extends Layer {
 
     private final Activation activation;
@@ -29,10 +32,15 @@ public class FullyConnectedLayer extends Layer {
         this.learningRate = learningRate;
 
         weights = new double[inLength][OUTPUT_CLASSES];
-        if (activation instanceof ReLU || activation instanceof LeakyReLU) {
+        if (activation instanceof ReLU || activation instanceof LeakyReLU || activation instanceof Linear) {
             initWeightsHe();
         } else if (activation instanceof Sigmoid) {
             initWeightsXavier();
+        } else {
+            throw new IllegalArgumentException(
+                "Unsupported activation function: " + activation.getClass().getSimpleName() +
+                    ". Supported: ReLU, LeakyReLU, Sigmoid"
+            );
         }
 
         biases = new double[OUTPUT_CLASSES];  // default init with zeros
