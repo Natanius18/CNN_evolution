@@ -27,7 +27,7 @@ public abstract class Layer {
     public abstract int getOutputElements();
     public abstract int getParameterCount();
 
-    public double[] matrixToVector(List<double[][]> input) {
+    double[] matrixToVector(List<double[][]> input) {
         double[][] first = input.getFirst();
         int rows = first.length;
         int cols = first[0].length;

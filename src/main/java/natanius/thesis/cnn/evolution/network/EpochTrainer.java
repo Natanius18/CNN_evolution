@@ -1,7 +1,6 @@
 package natanius.thesis.cnn.evolution.network;
 
 import static java.util.Collections.shuffle;
-import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
@@ -21,7 +20,7 @@ public class EpochTrainer {
             }
             shuffle(imagesTrain, RANDOM);
 
-            neuralNetwork.train(imagesTrain, BATCH_SIZE);
+            neuralNetwork.train(imagesTrain);
 
             accuracy = neuralNetwork.test(imagesTest);
             if (DEBUG) {

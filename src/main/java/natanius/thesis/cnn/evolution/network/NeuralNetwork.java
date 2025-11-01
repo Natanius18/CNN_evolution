@@ -1,7 +1,6 @@
 package natanius.thesis.cnn.evolution.network;
 
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
-import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,6 @@ public class NeuralNetwork {
     }
 
     public void linkLayers() {
-
         if (layers.size() <= 1) {
             return;
         }
@@ -48,10 +46,46 @@ public class NeuralNetwork {
         }
     }
 
+    /**
+     * Застосовує Softmax до вектора logits для отримання ймовірностей.
+     *
+     * @param logits вихідні значення з останнього шару
+     * @return вектор ймовірностей (сума = 1.0)
+     */
+    private double[] applySoftmax(double[] logits) {
+        // Для числової стабільності віднімаємо максимум
+        double max = logits[0];
+        for (int i = 1; i < logits.length; i++) {
+            if (logits[i] > max) max = logits[i];
+        }
+
+        double[] exp = new double[logits.length];
+        double sum = 0.0;
+
+        for (int i = 0; i < logits.length; i++) {
+            exp[i] = Math.exp(logits[i] - max);
+            sum += exp[i];
+        }
+
+        for (int i = 0; i < logits.length; i++) {
+            exp[i] /= sum;
+        }
+
+        return exp;
+    }
+
+    /**
+     * Обчислює градієнт Cross-Entropy Loss з Softmax.
+     * Для Softmax + Cross-Entropy градієнт спрощується до: output - target
+     *
+     * @param networkOutput вихід мережі після Softmax (ймовірності)
+     * @param correctAnswer правильна мітка класу (0-9)
+     * @return градієнт loss function
+     */
     public double[] getErrors(double[] networkOutput, int correctAnswer) {
         int numClasses = networkOutput.length;
         double[] expected = new double[numClasses];
-        expected[correctAnswer] = 1;
+        expected[correctAnswer] = 1;  // One-hot encoding
 
         double[] errors = new double[numClasses];
         for (int i = 0; i < numClasses; i++) {
@@ -61,7 +95,6 @@ public class NeuralNetwork {
     }
 
     private int getMaxIndex(double[] in) {
-
         double max = 0;
         int index = 0;
 
@@ -79,7 +112,8 @@ public class NeuralNetwork {
         List<double[][]> inList = new ArrayList<>();
         inList.add(image.data());
         double[] out = layers.getFirst().getOutput(inList);
-        return getMaxIndex(out);
+        double[] softmaxOut = applySoftmax(out);
+        return getMaxIndex(softmaxOut);
     }
 
     public float test(List<Image> images) {
@@ -101,49 +135,34 @@ public class NeuralNetwork {
         return ((float) correct / size);
     }
 
-    public void train(List<Image> images, int batchSize) {
-        int totalImages = images.size();
-        int numBatches = (int) Math.ceil((double) totalImages / batchSize);
 
-        for (int batchIndex = 0; batchIndex < numBatches; batchIndex++) {
-            printProgress(batchIndex, numBatches, "Training Batches");
+    public void train(List<Image> images) {
+        int size = images.size();
 
-            int startIdx = batchIndex * batchSize;
-            int endIdx = Math.min(startIdx + batchSize, totalImages);
-            int currentBatchSize = endIdx - startIdx; // Фактический размер батча
+        for (int i = 0; i < size; i++) {
+            printProgress(i, size, "Training        ");
 
-            List<double[]> batchErrors = new ArrayList<>(currentBatchSize);
+            Image img = images.get(i);
+            List<double[][]> inList = new ArrayList<>();
+            inList.add(img.data());
 
-            for (int i = startIdx; i < endIdx; i++) {
-                Image img = images.get(i);
-                List<double[][]> inList = new ArrayList<>();
-                inList.add(img.data());
+            // Forward pass
+            double[] out = layers.getFirst().getOutput(inList);
 
-                double[] out = layers.getFirst().getOutput(inList);
-                double[] dldO = getErrors(out, img.label());
-                batchErrors.add(dldO);
-            }
+            // Застосовуємо Softmax для отримання ймовірностей
+            double[] softmaxOut = applySoftmax(out);
 
-            // Aggregate errors and apply backpropagation
-            double[] avgError = new double[batchErrors.getFirst().length];
-            for (double[] error : batchErrors) {
-                for (int j = 0; j < avgError.length; j++) {
-                    avgError[j] += error[j];
-                }
-            }
+            // Обчислюємо градієнт Cross-Entropy Loss
+            double[] dldO = getErrors(softmaxOut, img.label());
 
-            for (int j = 0; j < avgError.length; j++) {
-                avgError[j] /= currentBatchSize; // делим на реальный размер батча
-            }
-
-            layers.getLast().backPropagation(avgError);
+            // Backpropagation
+            layers.getLast().backPropagation(dldO);
         }
+
         if (DEBUG) {
             System.out.println();
         }
     }
-
-
 
     private static void printProgress(int i, int totalImages, String processName) {
         if (DEBUG) {
@@ -169,9 +188,10 @@ public class NeuralNetwork {
             System.arraycopy(inputs, i * 28, inputMatrix[i], 0, 28);
         }
         List<double[][]> inList = new ArrayList<>();
-        multiply(inputMatrix, (1.0 / 255));
         inList.add(inputMatrix);
-        return layers.getFirst().getOutput(inList);
+
+        double[] out = layers.getFirst().getOutput(inList);
+        return applySoftmax(out);  // Повертаємо ймовірності
     }
 
     @Override
@@ -218,6 +238,4 @@ public class NeuralNetwork {
 
         return " ".repeat(leftPadding) + text + " ".repeat(rightPadding);
     }
-
-
 }

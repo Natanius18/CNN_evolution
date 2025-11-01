@@ -4,7 +4,6 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static natanius.thesis.cnn.evolution.OverfitTest.testOverfitting;
 import static natanius.thesis.cnn.evolution.WeightUpdateTest.testWeightUpdates;
-import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
@@ -24,13 +23,13 @@ import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.genes.GeneticAlgorithm;
 import natanius.thesis.cnn.evolution.genes.Individual;
 import natanius.thesis.cnn.evolution.layers.Layer;
-import natanius.thesis.cnn.evolution.network.EpochTrainer;
 import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
+import natanius.thesis.cnn.evolution.visualization.FormDigits;
 
 public class Evolution {
 
-    private static final int MODE = 2;
+    private static final int MODE = 1;
 
     public static void main(String[] args) {
 
@@ -55,21 +54,25 @@ public class Evolution {
 
     private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
         NeuralNetwork network = new NetworkBuilder()
-            .addConvolutionLayer(4, 3, 1, 0.001, new ReLU(), 0)  // Больше фильтров
+            .addConvolutionLayer(6, 5, 1, 0.001, new ReLU(), 0)
             .addMaxPoolLayer(2, 2)
-            .addConvolutionLayer(4, 3, 1, 0.001, new ReLU(), 0)  // Второй conv слой
+            .addConvolutionLayer(16, 5, 1, 0.001, new ReLU(), 0)
             .addMaxPoolLayer(2, 2)
             .addFullyConnectedLayer(0.001, new Linear())
             .build();
 
-        EpochTrainer epochTrainer = new EpochTrainer();
-        epochTrainer.train(network, imagesTrain, imagesTest);
+//        EpochTrainer epochTrainer = new EpochTrainer();
+//        epochTrainer.train(network, imagesTrain, imagesTest);
 
-        for (int epoch = 1; epoch <= 10; epoch++) {
-            network.train(imagesTrain, 100);
+        for (int epoch = 1; epoch <= 1; epoch++) {
+            long start = now().getEpochSecond();
+            network.train(imagesTrain);
             float accuracy = network.test(imagesTest);
             System.out.printf("Epoch %d: Test Accuracy = %.2f%%%n", epoch, accuracy);
+            printTimeTaken(now().getEpochSecond() - start);
         }
+
+        new Thread(new FormDigits(network)).start();
     }
 
     private static void runGeneticAlgorithm(List<Image> imagesTrain, List<Image> imagesTest) {
@@ -97,7 +100,7 @@ public class Evolution {
 
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             NeuralNetwork neuralNetwork = buildNetworkFromChromosome(best.getChromosome());
-            neuralNetwork.train(imagesTrain, BATCH_SIZE);
+            neuralNetwork.train(imagesTrain);
             float trainAccuracy = neuralNetwork.test(trainSet);
             float testAccuracy = neuralNetwork.test(imagesTest);
 
