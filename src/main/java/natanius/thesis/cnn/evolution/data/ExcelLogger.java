@@ -1,11 +1,14 @@
 package natanius.thesis.cnn.evolution.data;
 
 import static lombok.AccessLevel.PRIVATE;
+import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -17,12 +20,12 @@ public class ExcelLogger {
 
     private static final String FILE_PATH = "models/training_results.xlsx";
 
-    public static synchronized void saveResults(String modelName,
-                                   int epoch,
-                                   float testAccuracy,
-                                   float trainAccuracy,
-                                   int totalParams,
-                                   long trainingTime) {
+    public static synchronized void saveResults(float testAccuracy,
+                                                float trainAccuracy,
+                                                int totalParams,
+                                                long trainingTime,
+                                                String chromosome) {
+
         File file = new File(FILE_PATH);
         Workbook workbook;
         Sheet sheet;
@@ -42,12 +45,22 @@ public class ExcelLogger {
 
         int rowNum = sheet.getLastRowNum() + 1;
         Row row = sheet.createRow(rowNum);
-        row.createCell(0).setCellValue(modelName);
-        row.createCell(1).setCellValue(epoch);
-        row.createCell(2).setCellValue(testAccuracy);
-        row.createCell(3).setCellValue(trainAccuracy);
-        row.createCell(4).setCellValue(totalParams);
-        row.createCell(5).setCellValue(trainingTime);
+        row.createCell(0).setCellValue(testAccuracy);
+        row.createCell(1).setCellValue(trainAccuracy);
+        row.createCell(2).setCellValue(totalParams);
+        row.createCell(3).setCellValue(trainingTime);
+        row.createCell(4).setCellValue(chromosome);
+        row.createCell(5).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy")));
+        row.createCell(6).setCellValue(DATASET_FRACTION);
+
+        sheet.autoSizeColumn(0);
+        sheet.autoSizeColumn(1);
+        sheet.autoSizeColumn(2);
+        sheet.autoSizeColumn(3);
+        sheet.autoSizeColumn(4);
+        sheet.autoSizeColumn(5);
+        sheet.autoSizeColumn(6);
+
 
         try (FileOutputStream fos = new FileOutputStream(FILE_PATH)) {
             workbook.write(fos);
@@ -59,10 +72,12 @@ public class ExcelLogger {
 
     private static void createHeader(Sheet sheet) {
         Row header = sheet.createRow(0);
-        String[] columns = {"Model Name", "Epoch", "Test Accuracy", "Train Accuracy", "Total Parameters", "Training Time (s)"};
+        String[] columns = {
+            "Test Accuracy", "Train Accuracy",
+            "Total Parameters", "Training Time (s)", "Chromosome", "Date time", "Dataset fraction"
+        };
         for (int i = 0; i < columns.length; i++) {
             header.createCell(i).setCellValue(columns[i]);
         }
     }
 }
-

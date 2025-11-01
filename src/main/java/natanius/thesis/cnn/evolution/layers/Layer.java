@@ -28,44 +28,34 @@ public abstract class Layer {
     public abstract int getParameterCount();
 
     public double[] matrixToVector(List<double[][]> input) {
-
-        int length = input.size();
-        int rows = input.getFirst().length;
-        int cols = input.getFirst()[0].length;
-
-        double[] vector = new double[length * rows * cols];
-
+        double[][] first = input.getFirst();
+        int rows = first.length;
+        int cols = first[0].length;
+        double[] vector = new double[input.size() * rows * cols];
+        
         int i = 0;
-        for (int l = 0; l < length; l++) {
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    vector[i] = input.get(l)[r][c];
-                    i++;
-                }
+        for (double[][] matrix : input) {
+            for (double[] row : matrix) {
+                System.arraycopy(row, 0, vector, i, cols);
+                i += cols;
             }
         }
-
         return vector;
     }
 
     List<double[][]> vectorToMatrix(double[] input, int length, int rows, int cols) {
-
-        List<double[][]> out = new ArrayList<>();
+        List<double[][]> out = new ArrayList<>(length);
 
         int i = 0;
         for (int l = 0; l < length; l++) {
-
-            double[][] matrix = new double[rows][cols];
-
+            double[][] matrix = new double[rows][];
             for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    matrix[r][c] = input[i];
-                    i++;
-                }
+                matrix[r] = new double[cols];
+                System.arraycopy(input, i, matrix[r], 0, cols);
+                i += cols;
             }
             out.add(matrix);
         }
-
         return out;
     }
 

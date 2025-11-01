@@ -5,48 +5,35 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class MatrixUtility {
 
-    public static double[][] add(double[][] a, double[][] b) {
-        double[][] out = new double[a.length][a[0].length];
-
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a[0].length; j++) {
-                out[i][j] = a[i][j] + b[i][j];
+    public static void add(double[][] a, double[][] b) {
+        int length = a.length;
+        for (int i = 0; i < length; i++) {
+            double[] aRow = a[i];
+            double[] bRow = b[i];
+            for (int j = 0; j < length; j++) {
+                aRow[j] += bRow[j];
             }
         }
-
-        return out;
-
     }
 
-    public static double[] add(double[] a, double[] b) {
-        double[] out = new double[a.length];
-
+    public static void add(double[] a, double[] b) {
         for (int i = 0; i < a.length; i++) {
-            out[i] = a[i] + b[i];
+            a[i] += b[i];
         }
-        return out;
     }
 
-    public static double[][] multiply(double[][] a, double scalar) {
-        double[][] out = new double[a.length][a[0].length];
-
-        for (int i = 0; i < a.length; i++) {
-            for (int j = 0; j < a[0].length; j++) {
-                out[i][j] = a[i][j] * scalar;
+    public static void multiply(double[][] a, double scalar) {
+        int length = a.length;
+        for (double[] row : a) {
+            for (int j = 0; j < length; j++) {
+                row[j] *= scalar;
             }
         }
-        return out;
-
     }
 
-    public static double[] multiply(double[] a, double scalar) {
-        double[] out = new double[a.length];
-
+    public static void multiply(double[] a, double scalar) {
         for (int i = 0; i < a.length; i++) {
-            out[i] = a[i] * scalar;
+            a[i] *= scalar;
         }
-        return out;
     }
-
-
 }

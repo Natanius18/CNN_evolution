@@ -1,9 +1,8 @@
 package natanius.thesis.cnn.evolution.network;
 
-import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
+import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -13,10 +12,9 @@ import natanius.thesis.cnn.evolution.layers.FullyConnectedLayer;
 import natanius.thesis.cnn.evolution.layers.Layer;
 import natanius.thesis.cnn.evolution.layers.MaxPoolLayer;
 
-public class NeuralNetwork implements Serializable {
+public class NeuralNetwork {
     @Getter
     private final List<Layer> layers;
-    private final int scaleFactor;
 
     private static final String RESET = "\u001B[0m";
     private static final String RED = "\u001B[31m";
@@ -27,9 +25,8 @@ public class NeuralNetwork implements Serializable {
     private static final String YELLOW = "\u001B[33m"; // Stats
 
 
-    public NeuralNetwork(List<Layer> layers, int scaleFactor) {
+    public NeuralNetwork(List<Layer> layers) {
         this.layers = layers;
-        this.scaleFactor = scaleFactor;
         linkLayers();
     }
 
@@ -53,12 +50,14 @@ public class NeuralNetwork implements Serializable {
 
     public double[] getErrors(double[] networkOutput, int correctAnswer) {
         int numClasses = networkOutput.length;
-
         double[] expected = new double[numClasses];
-
         expected[correctAnswer] = 1;
 
-        return add(networkOutput, multiply(expected, -1));
+        double[] errors = new double[numClasses];
+        for (int i = 0; i < numClasses; i++) {
+            errors[i] = networkOutput[i] - expected[i];  // output - target
+        }
+        return errors;
     }
 
     private int getMaxIndex(double[] in) {
@@ -78,8 +77,7 @@ public class NeuralNetwork implements Serializable {
 
     public int guess(Image image) {
         List<double[][]> inList = new ArrayList<>();
-        inList.add(multiply(image.data(), (1.0 / scaleFactor)));
-
+        inList.add(image.data());
         double[] out = layers.getFirst().getOutput(inList);
         return getMaxIndex(out);
     }
@@ -89,7 +87,7 @@ public class NeuralNetwork implements Serializable {
 
         int size = images.size();
         for (int i = 0; i < size; i++) {
-            printProgress(i, size, "Testing");
+            printProgress(i, size, "Testing         ");
             Image img = images.get(i);
             int guess = guess(img);
 
@@ -97,7 +95,9 @@ public class NeuralNetwork implements Serializable {
                 correct++;
             }
         }
-        System.out.println();
+        if (DEBUG) {
+            System.out.println();
+        }
         return ((float) correct / size);
     }
 
@@ -110,13 +110,14 @@ public class NeuralNetwork implements Serializable {
 
             int startIdx = batchIndex * batchSize;
             int endIdx = Math.min(startIdx + batchSize, totalImages);
+            int currentBatchSize = endIdx - startIdx; // Фактический размер батча
 
-            List<double[]> batchErrors = new ArrayList<>();
+            List<double[]> batchErrors = new ArrayList<>(currentBatchSize);
 
             for (int i = startIdx; i < endIdx; i++) {
                 Image img = images.get(i);
                 List<double[][]> inList = new ArrayList<>();
-                inList.add(multiply(img.data(), (1.0 / scaleFactor)));
+                inList.add(img.data());
 
                 double[] out = layers.getFirst().getOutput(inList);
                 double[] dldO = getErrors(out, img.label());
@@ -132,28 +133,33 @@ public class NeuralNetwork implements Serializable {
             }
 
             for (int j = 0; j < avgError.length; j++) {
-                avgError[j] /= batchSize;
+                avgError[j] /= currentBatchSize; // делим на реальный размер батча
             }
 
             layers.getLast().backPropagation(avgError);
         }
-        System.out.println();
+        if (DEBUG) {
+            System.out.println();
+        }
     }
 
 
+
     private static void printProgress(int i, int totalImages, String processName) {
-        double progress = (i + 1) * 100. / totalImages;
-        String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
+        if (DEBUG) {
+            double progress = (i + 1) * 100. / totalImages;
+            String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
 
-        String progressBarColor;
-        if (progress < 50) {
-            progressBarColor = RED;
-        } else {
-            progressBarColor = progress < 80 ? YELLOW : GREEN;
+            String progressBarColor;
+            if (progress < 50) {
+                progressBarColor = RED;
+            } else {
+                progressBarColor = progress < 80 ? YELLOW : GREEN;
+            }
+
+            String formattedProgress = String.format("%.2f", progress);
+            System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
         }
-
-        String formattedProgress = String.format("%.2f", progress);
-        System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
     }
 
     public double[] guessInRealTime(double[] inputs) {
@@ -163,7 +169,8 @@ public class NeuralNetwork implements Serializable {
             System.arraycopy(inputs, i * 28, inputMatrix[i], 0, 28);
         }
         List<double[][]> inList = new ArrayList<>();
-        inList.add(multiply(inputMatrix, (1.0 / 255)));
+        multiply(inputMatrix, (1.0 / 255));
+        inList.add(inputMatrix);
         return layers.getFirst().getOutput(inList);
     }
 
