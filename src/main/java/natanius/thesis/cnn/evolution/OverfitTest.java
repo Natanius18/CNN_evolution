@@ -76,7 +76,7 @@ public class OverfitTest {
         double initialFCWeight = 0;
 
         if (convLayer != null) {
-            initialConvWeight = convLayer.getFilters().get(0)[0][0];
+            initialConvWeight = convLayer.getFilters().get(0)[0][0][0];
             System.out.printf("   Initial Conv weight[0][0][0]: %.8f%n", initialConvWeight);
         }
 
@@ -147,7 +147,7 @@ public class OverfitTest {
                 System.out.println("🔍 DIAGNOSTIC: Checking weight updates after epoch 1...");
 
                 if (convLayer != null) {
-                    double newConvWeight = convLayer.getFilters().get(0)[0][0];
+                    double newConvWeight = convLayer.getFilters().get(0)[0][0][0];
                     double convDelta = newConvWeight - initialConvWeight;
                     System.out.printf("   Conv weight[0][0][0]: %.8f (delta: %.8f)%n",
                         newConvWeight, convDelta);

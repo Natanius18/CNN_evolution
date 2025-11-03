@@ -64,7 +64,7 @@ public class Evolution {
 //        EpochTrainer epochTrainer = new EpochTrainer();
 //        epochTrainer.train(network, imagesTrain, imagesTest);
 
-        for (int epoch = 1; epoch <= 1; epoch++) {
+        for (int epoch = 1; epoch <= 10; epoch++) {
             long start = now().getEpochSecond();
             network.train(imagesTrain);
             float accuracy = network.test(imagesTest);

@@ -50,7 +50,7 @@ public class WeightUpdateTest {
         // Conv weights
         double[][] initialConvWeights = new double[8][9];
         for (int f = 0; f < 8; f++) {
-            double[][] filter = convLayer.getFilters().get(f);
+            double[][] filter = convLayer.getFilters().get(f)[0];
             int idx = 0;
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
@@ -133,7 +133,7 @@ public class WeightUpdateTest {
         double convTotalDelta = 0;
 
         for (int f = 0; f < 8; f++) {
-            double[][] filter = convLayer.getFilters().get(f);
+            double[][] filter = convLayer.getFilters().get(f)[0];
             int idx = 0;
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {

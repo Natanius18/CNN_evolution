@@ -22,10 +22,11 @@ public class ConvolutionLayer extends Layer {
     private final int inRows;
     private final int inCols;
     private final double learningRate;
-    private final List<double[][]> filters = new ArrayList<>();
+    private final List<double[][][]> filters = new ArrayList<>();  // [numFilters][filterSize][filterSize][inLength]
     private List<double[][]> lastInput;
     private final Activation activation;
     private List<double[][]> preActivationOutputs;
+    private final double[] biases;
 
     public ConvolutionLayer(int filterSize,
                             int stepSize,
@@ -44,6 +45,7 @@ public class ConvolutionLayer extends Layer {
         this.inCols = inCols;
         this.learningRate = learningRate;
         this.activation = activation;
+        this.biases = new double[numFilters];
 
         generateRandomFilters(numFilters);
 
@@ -83,22 +85,23 @@ public class ConvolutionLayer extends Layer {
      * @see <a href="https://arxiv.org/abs/1502.01852">He et al., 2015</a>
      */
     private void initFiltersHe(int numFilters) {
-        // Обчислюємо стандартне відхилення один раз
         int fanIn = filterSize * filterSize * inLength;
         double std = Math.sqrt(2.0 / fanIn);
 
         for (int n = 0; n < numFilters; n++) {
-            double[][] newFilter = new double[filterSize][filterSize];
+            double[][][] newFilter = new double[inLength][filterSize][filterSize];  // 3D фільтр
 
-            for (int i = 0; i < filterSize; i++) {
-                for (int j = 0; j < filterSize; j++) {
-                    newFilter[i][j] = RANDOM.nextGaussian() * std;
+            for (int c = 0; c < inLength; c++) {  // По каналах
+                for (int i = 0; i < filterSize; i++) {
+                    for (int j = 0; j < filterSize; j++) {
+                        newFilter[c][i][j] = RANDOM.nextGaussian() * std;
+                    }
                 }
             }
-
             filters.add(newFilter);
         }
     }
+
 
     /**
      * Ініціалізує фільтри за методом Xavier (Glorot) для Sigmoid та Tanh активацій.
@@ -110,24 +113,24 @@ public class ConvolutionLayer extends Layer {
      * @see <a href="http://proceedings.mlr.press/v9/glorot10a.html">Glorot & Bengio, 2010</a>
      */
     private void initFiltersXavier(int numFilters) {
-        // ✓ ПРАВИЛЬНО для Conv2D:
         int fanIn = filterSize * filterSize * inLength;
-        int fanOut = numFilters;
+        int fanOut = getOutputRows() * getOutputCols() * numFilters;
+
         double limit = Math.sqrt(6.0 / (fanIn + fanOut));
 
         for (int n = 0; n < numFilters; n++) {
-            double[][] newFilter = new double[filterSize][filterSize];
+            double[][][] newFilter = new double[inLength][filterSize][filterSize];
 
-            for (int i = 0; i < filterSize; i++) {
-                for (int j = 0; j < filterSize; j++) {
-                    newFilter[i][j] = (RANDOM.nextDouble() * 2 - 1) * limit;
+            for (int c = 0; c < inLength; c++) {  // ✅ По каналах
+                for (int i = 0; i < filterSize; i++) {
+                    for (int j = 0; j < filterSize; j++) {
+                        newFilter[c][i][j] = (RANDOM.nextDouble() * 2 - 1) * limit;
+                    }
                 }
             }
-
             filters.add(newFilter);
         }
     }
-
 
 
     @Override
@@ -172,60 +175,39 @@ public class ConvolutionLayer extends Layer {
      * (size + 2×padding - filterSize) / stride + 1
      */
     public List<double[][]> convolutionForwardPass(List<double[][]> list) {
+        if (list.size() != inLength) {
+            throw new IllegalArgumentException(
+                "Expected " + inLength + " input channels, got " + list.size()
+            );
+        }
+
         lastInput = list;
         preActivationOutputs = new ArrayList<>();
         List<double[][]> output = new ArrayList<>();
 
-        for (double[][] input : list) {
-            for (double[][] filter : filters) {
-                output.add(convolveWithActivation(input, filter));
-            }
+        // ✅ Кожен фільтр створює ОДНУ feature map
+        for (int f = 0; f < filters.size(); f++) {
+            output.add(convolveMultiChannel(list, filters.get(f), f));
         }
+
         return output;
     }
 
     /**
-     * Виконує операцію дискретної згортки (convolution) між вхідною матрицею та фільтром.
-     *
-     * <p><b>Математична формула згортки:</b>
-     * <pre>
-     * Output[i][j] = Σ Σ Input[i×stride + x][j×stride + y] × Filter[x][y]
-     *                x y
-     * </pre>
-     * де k - розмір фільтра, s - stride (крок зсуву).
-     *
-     * <p><b>Розмір виходу обчислюється за формулою:</b>
-     * <p>
-     * H_out = (H_in + 2p - k) / s + 1
-     * <p>
-     * W_out = (W_in + 2p - k) / s + 1
-     * <p>
-     * де H_in, W_in - розміри входу, p - padding, k - розмір ядра, s - stride.
-     *
-     * <p><b>Процес згортки:</b>
-     * <ol>
-     *   <li>Додається padding до вхідної матриці (якщо padding > 0)</li>
-     *   <li>Фільтр "ковзає" по вхідній матриці з кроком stride</li>
-     *   <li>На кожній позиції обчислюється скалярний добуток фільтра та відповідної області входу</li>
-     *   <li>Результат записується у вихідну матрицю</li>
-     *   <li>Активаційна функція застосовується до кожного елемента вихідної матриці</li>
-     * </ol>
-     *
-     * @param input  вхідна feature map розміром [H_in][W_in]
-     * @param filter фільтр (ядро згортки) розміром [k][k]
-     * @return вихідна feature map розміром [H_out][W_out] після згортки
+     * Виконує multi-channel згортку: один фільтр застосовується до всіх вхідних каналів.
+     * Результати підсумовуються.
      */
-    private double[][] convolveWithActivation(double[][] input, double[][] filter) {
+    private double[][] convolveMultiChannel(List<double[][]> inputs, double[][][] filter, int filterIndex) {
+        double[][][] paddedInputs = new double[inLength][][];
+        for (int c = 0; c < inLength; c++) {
+            paddedInputs[c] = applyPadding(inputs.get(c), padding);
+        }
 
-        // Застосовуємо padding до входу
-        double[][] paddedInput = applyPadding(input, padding);
+        int paddedRows = paddedInputs[0].length;
+        int paddedCols = paddedInputs[0][0].length;
+        int fRows = filterSize;
+        int fCols = filterSize;
 
-        int paddedRows = paddedInput.length;
-        int paddedCols = paddedInput[0].length;
-        int fRows = filter.length;
-        int fCols = filter[0].length;
-
-        // Обчислюємо розмір виходу за формулою: (H + 2p - k) / s + 1
         int outRows = (paddedRows - fRows) / stepSize + 1;
         int outCols = (paddedCols - fCols) / stepSize + 1;
 
@@ -233,31 +215,33 @@ public class ConvolutionLayer extends Layer {
         double[][] output = new double[outRows][outCols];
 
         int outRow = 0;
-
-        // Ковзаємо фільтром по вхідній матриці
         for (int iStrides = 0; iStrides <= paddedRows - fRows; iStrides += stepSize) {
             int outCol = 0;
-
             for (int j = 0; j <= paddedCols - fCols; j += stepSize) {
-
                 double sum = 0.0;
 
-                // Обчислюємо скалярний добуток фільтра та області входу
-                // Output[i][j] = Σ Σ Input[i×stride + x][j×stride + y] × Filter[x][y]
-                for (int x = 0; x < fRows; x++) {
-                    for (int y = 0; y < fCols; y++) {
-                        sum += paddedInput[iStrides + x][j + y] * filter[x][y];
+                // ✅ Підсумовуємо по всіх каналах
+                for (int c = 0; c < inLength; c++) {
+                    for (int x = 0; x < fRows; x++) {
+                        for (int y = 0; y < fCols; y++) {
+                            sum += paddedInputs[c][iStrides + x][j + y] * filter[c][x][y];
+                        }
                     }
                 }
+
+                sum += biases[filterIndex];
+
                 preActivationOutput[outRow][outCol] = sum;
                 output[outRow][outCol] = activation.forward(sum);
                 outCol++;
             }
             outRow++;
         }
+
         preActivationOutputs.add(preActivationOutput);
         return output;
     }
+
 
     /**
      * Додає zero padding (обрамлення з нулів) навколо вхідної матриці.
@@ -310,9 +294,10 @@ public class ConvolutionLayer extends Layer {
 
     @Override
     public void backPropagation(List<double[][]> dLdO) {
-        // ШАГ 1: Обчислюємо градієнт з урахуванням похідної активації
-        List<double[][]> dLdZ = new ArrayList<>();
+        // dLdO.size() == filters.size() (по одному градієнту на фільтр)
 
+        // КРОК 1: Gradient через activation
+        List<double[][]> dLdZ = new ArrayList<>();
         for (int idx = 0; idx < dLdO.size(); idx++) {
             double[][] gradOutput = dLdO.get(idx);
             double[][] preActivation = preActivationOutputs.get(idx);
@@ -322,53 +307,90 @@ public class ConvolutionLayer extends Layer {
 
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    // Множимо градієнт на похідну активації
                     gradPreActivation[r][c] = gradOutput[r][c] * activation.backward(preActivation[r][c]);
                 }
             }
             dLdZ.add(gradPreActivation);
         }
 
-        // ШАГ 2: Тепер обчислюємо градієнти фільтрів та входу
-        List<double[][]> filtersDelta = new ArrayList<>();
-        List<double[][]> dLdOPreviousLayer = new ArrayList<>();
-
+        // КРОК 2: Обчислення градієнтів
+        List<double[][][]> filtersDelta = new ArrayList<>();
         for (int f = 0; f < filters.size(); f++) {
-            filtersDelta.add(new double[filterSize][filterSize]);
+            filtersDelta.add(new double[inLength][filterSize][filterSize]);  // ✅ 3D
         }
 
-        for (int i = 0; i < lastInput.size(); i++) {
-            double[][] errorForInput = new double[inRows][inCols];
+        double[] biasesDelta = new double[filters.size()];
 
-            for (int f = 0; f < filters.size(); f++) {
-                double[][] currFilter = filters.get(f);
-                double[][] error = dLdZ.get(i * filters.size() + f);  // Використовуємо dLdZ!
+        // ✅ Градієнт по входу - окремо для кожного каналу
+        List<double[][]> dLdOPreviousLayer = new ArrayList<>();
+        for (int c = 0; c < inLength; c++) {
+            dLdOPreviousLayer.add(new double[inRows][inCols]);
+        }
 
-                // Градієнт по фільтрах
-                double[][] spacedError = spaceArray(error);
-                double[][] flippedError = flipArrayHorizontal(flipArrayVertical(spacedError));
-                double[][] paddedInput = applyPadding(lastInput.get(i), padding);
-                double[][] dLdF = pureConvolve(paddedInput, flippedError);
+        // ✅ Проходимо по кожному фільтру
+        for (int f = 0; f < filters.size(); f++) {
+            double[][][] currFilter = filters.get(f);
+            double[][] error = dLdZ.get(f);  // ✅ Один градієнт на фільтр
 
-                multiply(dLdF, learningRate * -1);
-                add(filtersDelta.get(f), dLdF);
+            double[][] spacedError = spaceArray(error);
+            double[][] flippedError = flipArrayHorizontal(flipArrayVertical(spacedError));
 
-                // Градієнт по входу
-                double[][] flippedFilter = flipArrayHorizontal(flipArrayVertical(currFilter));
-                add(errorForInput, fullConvolve(flippedFilter, spacedError));
+            // Градієнт по bias
+            for (double[] row : error) {
+                for (double val : row) {
+                    biasesDelta[f] += val;
+                }
             }
 
-            dLdOPreviousLayer.add(errorForInput);
+            // ✅ По кожному каналу окремо
+            for (int c = 0; c < inLength; c++) {
+                double[][] paddedInput = applyPadding(lastInput.get(c), padding);
+
+                // Градієнт по фільтру (канал c)
+                double[][] dLdF = pureConvolve(paddedInput, flippedError);
+                add(filtersDelta.get(f)[c], dLdF);
+
+                // Градієнт по входу (канал c)
+                double[][] flippedFilter = flipArrayHorizontal(flipArrayVertical(currFilter[c]));
+                double[][] convResult = fullConvolve(flippedFilter, spacedError);
+
+                if (padding > 0) {
+                    convResult = removePadding(convResult, padding);
+                }
+
+                add(dLdOPreviousLayer.get(c), convResult);
+            }
         }
 
-        // ШАГ 3: Оновлюємо ваги
+        // КРОК 3: Оновлення ваг
         for (int f = 0; f < filters.size(); f++) {
-            add(filters.get(f), filtersDelta.get(f));  // filters += (-lr * gradient)
+            for (int c = 0; c < inLength; c++) {
+                multiply(filtersDelta.get(f)[c], -learningRate);
+                add(filters.get(f)[c], filtersDelta.get(f)[c]);
+            }
+            biases[f] += -learningRate * biasesDelta[f];
         }
 
         if (previousLayer != null) {
             previousLayer.backPropagation(dLdOPreviousLayer);
         }
+    }
+
+
+    private double[][] removePadding(double[][] input, int padding) {
+        if (padding == 0) {
+            return input;
+        }
+
+        int rows = input.length - 2 * padding;
+        int cols = input[0].length - 2 * padding;
+        double[][] output = new double[rows][cols];
+
+        for (int i = 0; i < rows; i++) {
+            System.arraycopy(input[i + padding], padding, output[i], 0, cols);
+        }
+
+        return output;
     }
 
 
@@ -513,7 +535,7 @@ public class ConvolutionLayer extends Layer {
 
     @Override
     public int getOutputLength() {
-        return filters.size() * inLength;
+        return filters.size();  // Кількість вихідних каналів = кількість фільтрів
     }
 
 
@@ -544,7 +566,8 @@ public class ConvolutionLayer extends Layer {
 
     @Override
     public int getParameterCount() {
-        return filters.size() * filterSize * filterSize;
+        return filters.size() * filterSize * filterSize * inLength  // ваги
+            + filters.size();                                      // biases
     }
 
     @Override
