@@ -71,11 +71,14 @@ public class GeneticFunctions {
             }
             if (!convIndices.isEmpty()) {
                 int idx = convIndices.get(RANDOM.nextInt(convIndices.size()));
+                int prevFilters = idx > 0 ? getPreviousConvFilters(layers, idx) : ALLOWED_FILTERS[0];
+                int minFilterIndex = getMinFilterIndex(prevFilters);
+                
                 int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
                 int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
                 layers.set(idx, new LayerGene(
                     LayerType.CONVOLUTION,
-                    ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)],
+                    ALLOWED_FILTERS[minFilterIndex + RANDOM.nextInt(ALLOWED_FILTERS.length - minFilterIndex)],
                     filterSize,
                     ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
                     padding
@@ -84,11 +87,14 @@ public class GeneticFunctions {
         } else if (mutationType < 0.5) {
             // Добавить Conv слой
             int pos = RANDOM.nextInt(layers.size() + 1);
+            int prevFilters = pos > 0 ? getPreviousConvFilters(layers, pos) : ALLOWED_FILTERS[0];
+            int minFilterIndex = getMinFilterIndex(prevFilters);
+            
             int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
             int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
             layers.add(pos, new LayerGene(
                 LayerType.CONVOLUTION,
-                ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)],
+                ALLOWED_FILTERS[minFilterIndex + RANDOM.nextInt(ALLOWED_FILTERS.length - minFilterIndex)],
                 filterSize,
                 ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
                 padding
@@ -158,15 +164,41 @@ public class GeneticFunctions {
                     break;
                     
                 case FULLY_CONNECTED:
-                    builder.addFullyConnectedLayer(
-                        LEARNING_RATE_FULLY_CONNECTED,
-                        new Linear()
-                    );
+                    if (gene.getFcSize() != null) {
+                        builder.addFullyConnectedLayer(
+                            gene.getFcSize(),
+                            LEARNING_RATE_FULLY_CONNECTED,
+                            gene.getActivation()
+                        );
+                    } else {
+                        builder.addFullyConnectedLayer(
+                            LEARNING_RATE_FULLY_CONNECTED,
+                            new Linear()
+                        );
+                    }
                     break;
             }
         }
 
         return builder.build();
+    }
+
+    private static int getPreviousConvFilters(List<LayerGene> layers, int currentIdx) {
+        for (int i = currentIdx - 1; i >= 0; i--) {
+            if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+                return layers.get(i).getNumFilters();
+            }
+        }
+        return ALLOWED_FILTERS[0];
+    }
+
+    private static int getMinFilterIndex(int minFilters) {
+        for (int i = 0; i < ALLOWED_FILTERS.length; i++) {
+            if (ALLOWED_FILTERS[i] >= minFilters) {
+                return i;
+            }
+        }
+        return ALLOWED_FILTERS.length - 1;
     }
 
 }

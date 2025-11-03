@@ -73,7 +73,20 @@ public class NetworkBuilder {
             }
             layers.add(new FullyConnectedLayer(activation, inputElements, learningRate));
         }
+        return this;
+    }
 
+    public NetworkBuilder addFullyConnectedLayer(int outputSize, double learningRate, Activation activation) {
+        if (layers.isEmpty()) {
+            layers.add(new FullyConnectedLayer(activation, INPUT_COLS * INPUT_ROWS, outputSize, learningRate));
+        } else {
+            Layer prev = layers.getLast();
+            int inputElements = prev.getOutputElements();
+            if (inputElements <= 0) {
+                throw new IllegalStateException("Cannot add fully connected layer: previous layer output is invalid");
+            }
+            layers.add(new FullyConnectedLayer(activation, inputElements, outputSize, learningRate));
+        }
         return this;
     }
 

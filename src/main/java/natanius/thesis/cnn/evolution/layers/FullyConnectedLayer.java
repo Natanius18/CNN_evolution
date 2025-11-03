@@ -20,18 +20,23 @@ public class FullyConnectedLayer extends Layer {
     private final double[] biases;
 
     private final int inLength;
+    private final int outLength;
     private final double learningRate;
 
-    private double[] lastZ;  //  містить зважені суми до застосування функції активації
-    private double[] lastX;  // зберiгає вхiднi данi шару
-
+    private double[] lastZ;
+    private double[] lastX;
 
     public FullyConnectedLayer(Activation activation, int inLength, double learningRate) {
+        this(activation, inLength, OUTPUT_CLASSES, learningRate);
+    }
+
+    public FullyConnectedLayer(Activation activation, int inLength, int outLength, double learningRate) {
         this.activation = activation;
         this.inLength = inLength;
+        this.outLength = outLength;
         this.learningRate = learningRate;
 
-        weights = new double[inLength][OUTPUT_CLASSES];
+        weights = new double[inLength][outLength];
         if (activation instanceof ReLU || activation instanceof LeakyReLU || activation instanceof Linear) {
             initWeightsHe();
         } else if (activation instanceof Sigmoid) {
@@ -43,7 +48,7 @@ public class FullyConnectedLayer extends Layer {
             );
         }
 
-        biases = new double[OUTPUT_CLASSES];  // default init with zeros
+        biases = new double[outLength];
 
     }
 
@@ -100,8 +105,8 @@ public class FullyConnectedLayer extends Layer {
             if (aPrevI != 0.0) {
                 double[] wRow = weights[i];
 
-                for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                    z[j] += wRow[j] * aPrevI;  // z^(l)_j += W^(l)_ij · a^(l-1)_i
+                for (int j = 0; j < outLength; j++) {
+                    z[j] += wRow[j] * aPrevI;
                 }
             }
         }
@@ -123,8 +128,8 @@ public class FullyConnectedLayer extends Layer {
      * @return вектор a^(l) = f^(l)(z^(l)) — активації після застосування функції
      */
     private double[] applyActivation(double[] z) {
-        double[] a = new double[OUTPUT_CLASSES];
-        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+        double[] a = new double[outLength];
+        for (int j = 0; j < outLength; j++) {
             a[j] = activation.forward(z[j]);
         }
         return a;
@@ -196,8 +201,8 @@ public class FullyConnectedLayer extends Layer {
     public void backPropagation(double[] dLda) {
         // ЕТАП 1: Обчислення локальної похибки δ^(l)
         // δ^(l) = ∂L/∂a^(l) ⊙ f'(z^(l))
-        double[] delta = new double[OUTPUT_CLASSES];
-        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+        double[] delta = new double[outLength];
+        for (int j = 0; j < outLength; j++) {
             delta[j] = dLda[j] * activation.backward(lastZ[j]);
         }
 
@@ -207,9 +212,9 @@ public class FullyConnectedLayer extends Layer {
         double[] dLdaPrev = new double[inLength];
         for (int i = 0; i < inLength; i++) {
             double sum = 0.0;
-            double[] wRow = weights[i];  // i-й рядок матриці W^(l)
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
-                sum += wRow[j] * delta[j];  // W^(l)_ij · δ^(l)_j
+            double[] wRow = weights[i];
+            for (int j = 0; j < outLength; j++) {
+                sum += wRow[j] * delta[j];
             }
             dLdaPrev[i] = sum;
         }
@@ -218,9 +223,9 @@ public class FullyConnectedLayer extends Layer {
         // W^(l)_ij := W^(l)_ij - η · ∂L/∂W^(l)_ij
         // де ∂L/∂W^(l)_ij = a^(l-1)_i · δ^(l)_j
         for (int i = 0; i < inLength; i++) {
-            double aPrevI = lastX[i];  // a^(l-1)_i
+            double aPrevI = lastX[i];
             double[] wRow = weights[i];
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            for (int j = 0; j < outLength; j++) {
                 double dLdWij = aPrevI * delta[j];
                 wRow[j] -= learningRate * dLdWij;
             }
@@ -229,7 +234,7 @@ public class FullyConnectedLayer extends Layer {
         // ЕТАП 4: Оновлення зміщень
         // b^(l)_j := b^(l)_j - η · ∂L/∂b^(l)_j
         // де ∂L/∂b^(l)_j = δ^(l)_j
-        for (int j = 0; j < OUTPUT_CLASSES; j++) {
+        for (int j = 0; j < outLength; j++) {
             biases[j] -= learningRate * delta[j];
         }
 
@@ -248,7 +253,7 @@ public class FullyConnectedLayer extends Layer {
 
     @Override
     public int getOutputLength() {
-        return OUTPUT_CLASSES;
+        return outLength;
     }
 
     @Override
@@ -263,34 +268,34 @@ public class FullyConnectedLayer extends Layer {
 
     @Override
     public int getOutputElements() {
-        return OUTPUT_CLASSES;
+        return outLength;
     }
 
     @Override
     public int getParameterCount() {
-        return inLength * OUTPUT_CLASSES + OUTPUT_CLASSES;  // Weight matrix size + bias
+        return inLength * outLength + outLength;
     }
 
     @Override
     public String toString() {
         return String.format("🔗 FULLY CONNECTED | Inputs: %d → Outputs: %d | Parameters: %d",
-            inLength, OUTPUT_CLASSES, getParameterCount());
+            inLength, outLength, getParameterCount());
     }
 
 
     private void initWeightsHe() {
         double std = Math.sqrt(2.0 / inLength);
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            for (int j = 0; j < outLength; j++) {
                 weights[i][j] = RANDOM.nextGaussian() * std;
             }
         }
     }
 
     private void initWeightsXavier() {
-        double limit = Math.sqrt(6.0 / (inLength + OUTPUT_CLASSES));
+        double limit = Math.sqrt(6.0 / (inLength + outLength));
         for (int i = 0; i < inLength; i++) {
-            for (int j = 0; j < OUTPUT_CLASSES; j++) {
+            for (int j = 0; j < outLength; j++) {
                 weights[i][j] = (RANDOM.nextDouble() * 2 - 1) * limit;
             }
         }
