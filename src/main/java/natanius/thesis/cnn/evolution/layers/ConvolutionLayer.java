@@ -200,7 +200,7 @@ public class ConvolutionLayer extends Layer {
     private double[][] convolveMultiChannel(List<double[][]> inputs, double[][][] filter, int filterIndex) {
         double[][][] paddedInputs = new double[inLength][][];
         for (int c = 0; c < inLength; c++) {
-            paddedInputs[c] = applyPadding(inputs.get(c), padding);
+            paddedInputs[c] = applyPadding(inputs.get(c));
         }
 
         int paddedRows = paddedInputs[0].length;
@@ -265,7 +265,7 @@ public class ConvolutionLayer extends Layer {
      * @param padding кількість нулів для додавання з кожної сторони
      * @return матриця розміром [rows + 2×padding][cols + 2×padding] з доданим padding
      */
-    private double[][] applyPadding(double[][] input, int padding) {
+    private double[][] applyPadding(double[][] input) {
         if (padding == 0) {
             return input;
         }
@@ -288,7 +288,7 @@ public class ConvolutionLayer extends Layer {
 
     @Override
     public void backPropagation(double[] dLdO) {
-        List<double[][]> matrixInput = vectorToMatrix(dLdO, inLength, inRows, inCols);
+        List<double[][]> matrixInput = vectorToMatrix(dLdO, getOutputLength(), getOutputRows(), getOutputCols());
         backPropagation(matrixInput);
     }
 
@@ -344,7 +344,7 @@ public class ConvolutionLayer extends Layer {
 
             // ✅ По кожному каналу окремо
             for (int c = 0; c < inLength; c++) {
-                double[][] paddedInput = applyPadding(lastInput.get(c), padding);
+                double[][] paddedInput = applyPadding(lastInput.get(c));
 
                 // Градієнт по фільтру (канал c)
                 double[][] dLdF = pureConvolve(paddedInput, flippedError);
@@ -355,7 +355,7 @@ public class ConvolutionLayer extends Layer {
                 double[][] convResult = fullConvolve(flippedFilter, spacedError);
 
                 if (padding > 0) {
-                    convResult = removePadding(convResult, padding);
+                    convResult = removePadding(convResult);
                 }
 
                 add(dLdOPreviousLayer.get(c), convResult);
@@ -377,7 +377,7 @@ public class ConvolutionLayer extends Layer {
     }
 
 
-    private double[][] removePadding(double[][] input, int padding) {
+    private double[][] removePadding(double[][] input) {
         if (padding == 0) {
             return input;
         }

@@ -29,7 +29,7 @@ import natanius.thesis.cnn.evolution.visualization.FormDigits;
 
 public class Evolution {
 
-    private static final int MODE = 1;
+    private static final int MODE = 2;
 
     public static void main(String[] args) {
 

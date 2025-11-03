@@ -23,8 +23,8 @@ public class Constants {
     public static final int[] ALLOWED_FILTERS = {4, 8, 16}; //, 32, 64};
     public static final Activation[] ACTIVATION_STRATEGIES = {new ReLU(), new LeakyReLU(), new Sigmoid()};
 
-    // Parameters to optimize later
-    public static final int CONV_LAYERS = 2;
+    public static final int MIN_CONV_BLOCKS = 1;
+    public static final int MAX_CONV_BLOCKS = 4;
     public static final int CONV_STEP_SIZE = 1;
     public static double getLearningRate(Activation activation) {
         if (activation instanceof Sigmoid) {
@@ -44,10 +44,10 @@ public class Constants {
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
-    public static final float DATASET_FRACTION = 0.1f;
+    public static final float DATASET_FRACTION = 0.01f;
 
 
     public static final int EPOCHS = 5;
     public static final boolean FAST_MODE = true;
-    public static final boolean DEBUG = true;
+    public static final boolean DEBUG = false;
 }

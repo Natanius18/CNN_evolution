@@ -3,7 +3,6 @@ package natanius.thesis.cnn.evolution.genes;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
-import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
@@ -12,7 +11,8 @@ import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_WINDOW_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.Constants.getLearningRate;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import natanius.thesis.cnn.evolution.activation.Linear;
 import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
@@ -21,33 +21,33 @@ public class GeneticFunctions {
 
     // Кроссовер: создаём ребёнка из двух родителей
     public static Chromosome crossover(Chromosome parent1, Chromosome parent2) {
-        int[] childFilters = new int[CONV_LAYERS];
-        int[] childFilterSizes = new int[CONV_LAYERS];
+        List<LayerGene> p1Layers = parent1.getLayerGenes();
+        List<LayerGene> p2Layers = parent2.getLayerGenes();
 
-        // Одноточечный кроссовер по количеству фильтров
-        int cutPoint1 = RANDOM.nextInt(CONV_LAYERS);
-        for (int i = 0; i < CONV_LAYERS; i++) {
-            childFilters[i] = (i < cutPoint1) ? parent1.getNumFilters()[i] : parent2.getNumFilters()[i];
+        // Убираем FC слой для кроссовера
+        List<LayerGene> p1WithoutFC = p1Layers.subList(0, p1Layers.size() - 1);
+        List<LayerGene> p2WithoutFC = p2Layers.subList(0, p2Layers.size() - 1);
+
+        int minSize = Math.min(p1WithoutFC.size(), p2WithoutFC.size());
+        int cutPoint = minSize > 1 ? RANDOM.nextInt(minSize) : 0;
+
+        List<LayerGene> childLayers = new ArrayList<>();
+        childLayers.addAll(p1WithoutFC.subList(0, cutPoint));
+        childLayers.addAll(p2WithoutFC.subList(cutPoint, p2WithoutFC.size()));
+
+        if (childLayers.isEmpty()) {
+            childLayers.add(p1WithoutFC.get(0));
         }
+        
+        childLayers.add(new LayerGene(LayerType.FULLY_CONNECTED));
 
-        // Одноточечный кроссовер по размерам фильтров
-        int cutPoint2 = RANDOM.nextInt(CONV_LAYERS);
-        for (int i = 0; i < CONV_LAYERS; i++) {
-            childFilterSizes[i] = (i < cutPoint2) ? parent1.getFilterSizes()[i] : parent2.getFilterSizes()[i];
-        }
-
-        // Активацию выбираем случайно у одного из родителей
-        var childActivation = (RANDOM.nextBoolean()) ? parent1.getActivation() : parent2.getActivation();
-
-        Chromosome child = new Chromosome(childFilters, childFilterSizes, childActivation);
+        Chromosome child = new Chromosome(childLayers);
 
         if (DEBUG) {
             System.out.println("\n--- Crossover ---");
-            System.out.println("Parent1 filters: " + Arrays.toString(parent1.getNumFilters()));
-            System.out.println("Parent2 filters: " + Arrays.toString(parent2.getNumFilters()));
-            System.out.println("Child   filters: " + Arrays.toString(child.getNumFilters()));
-            System.out.println("Child   sizes:   " + Arrays.toString(child.getFilterSizes()));
-            System.out.println("Child   act:     " + child.getActivation().getClass().getSimpleName());
+            System.out.println("Parent1: " + parent1);
+            System.out.println("Parent2: " + parent2);
+            System.out.println("Child:   " + child);
         }
 
         return child;
@@ -55,31 +55,83 @@ public class GeneticFunctions {
 
     // Мутация: случайная перестановка или замена значений
     public static Chromosome mutate(Chromosome individual) {
-        int[] filters = Arrays.copyOf(individual.getNumFilters(), CONV_LAYERS);
-        int[] sizes = Arrays.copyOf(individual.getFilterSizes(), CONV_LAYERS);
-        var activation = individual.getActivation();
+        List<LayerGene> layers = new ArrayList<>(individual.getLayerGenes());
+        // Убираем FC слой для мутации
+        layers.remove(layers.size() - 1);
+        
+        double mutationType = RANDOM.nextDouble();
 
-        // Случайно меняем количество фильтров в одном месте
-        int idxF = RANDOM.nextInt(CONV_LAYERS);
-        filters[idxF] = ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)];
-
-        // Случайно меняем размер фильтра в одном месте
-        int idxS = RANDOM.nextInt(CONV_LAYERS);
-        sizes[idxS] = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
-
-        // Иногда мутируем функцию активации
-        if (RANDOM.nextDouble() < 0.3) { // вероятность 30%
-            activation = ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)];
+        if (mutationType < 0.3) {
+            // Изменить параметры случайного Conv слоя
+            List<Integer> convIndices = new ArrayList<>();
+            for (int i = 0; i < layers.size(); i++) {
+                if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+                    convIndices.add(i);
+                }
+            }
+            if (!convIndices.isEmpty()) {
+                int idx = convIndices.get(RANDOM.nextInt(convIndices.size()));
+                int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
+                int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
+                layers.set(idx, new LayerGene(
+                    LayerType.CONVOLUTION,
+                    ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)],
+                    filterSize,
+                    ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
+                    padding
+                ));
+            }
+        } else if (mutationType < 0.5) {
+            // Добавить Conv слой
+            int pos = RANDOM.nextInt(layers.size() + 1);
+            int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
+            int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
+            layers.add(pos, new LayerGene(
+                LayerType.CONVOLUTION,
+                ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)],
+                filterSize,
+                ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
+                padding
+            ));
+        } else if (mutationType < 0.7) {
+            // Добавить/удалить MaxPool слой
+            if (RANDOM.nextBoolean() && layers.size() > 1) {
+                // Удалить случайный MaxPool
+                List<Integer> poolIndices = new ArrayList<>();
+                for (int i = 0; i < layers.size(); i++) {
+                    if (layers.get(i).getType() == LayerType.MAX_POOL) {
+                        poolIndices.add(i);
+                    }
+                }
+                if (!poolIndices.isEmpty()) {
+                    layers.remove((int) poolIndices.get(RANDOM.nextInt(poolIndices.size())));
+                }
+            } else {
+                // Добавить MaxPool после случайного Conv
+                List<Integer> convIndices = new ArrayList<>();
+                for (int i = 0; i < layers.size(); i++) {
+                    if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+                        convIndices.add(i);
+                    }
+                }
+                if (!convIndices.isEmpty()) {
+                    int idx = convIndices.get(RANDOM.nextInt(convIndices.size()));
+                    layers.add(idx + 1, new LayerGene(LayerType.MAX_POOL));
+                }
+            }
+        } else if (layers.size() > 2) {
+            // Удалить случайный слой (но не последний Conv)
+            int idx = RANDOM.nextInt(layers.size() - 1);
+            layers.remove(idx);
         }
-
-        Chromosome mutated = new Chromosome(filters, sizes, activation);
+        
+        layers.add(new LayerGene(LayerType.FULLY_CONNECTED));
+        Chromosome mutated = new Chromosome(layers);
 
         if (DEBUG) {
             System.out.println("\n--- Mutation ---");
-            System.out.println("Before filters: " + Arrays.toString(individual.getNumFilters()));
-            System.out.println("After  filters: " + Arrays.toString(mutated.getNumFilters()));
-            System.out.println("After  sizes:   " + Arrays.toString(mutated.getFilterSizes()));
-            System.out.println("After  act:     " + mutated.getActivation().getClass().getSimpleName());
+            System.out.println("Before: " + individual);
+            System.out.println("After:  " + mutated);
         }
 
         return mutated;
@@ -88,30 +140,33 @@ public class GeneticFunctions {
     public static NeuralNetwork buildNetworkFromChromosome(Chromosome chromosome) {
         NetworkBuilder builder = new NetworkBuilder();
 
-        // добавляем сверточные и pooling-слои
-        for (int i = 0; i < CONV_LAYERS; i++) {
-            int filters = chromosome.getNumFilters()[i];
-            int filterSize = chromosome.getFilterSizes()[i];
-
-            int padding = filterSize / 2;
-
-            builder.addConvolutionLayer(
-                filters,
-                filterSize,
-                CONV_STEP_SIZE,
-                getLearningRate(chromosome.getActivation()),
-                chromosome.getActivation(),
-                padding //todo
-            ).addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
+        for (LayerGene gene : chromosome.getLayerGenes()) {
+            switch (gene.getType()) {
+                case CONVOLUTION:
+                    builder.addConvolutionLayer(
+                        gene.getNumFilters(),
+                        gene.getFilterSize(),
+                        CONV_STEP_SIZE,
+                        getLearningRate(gene.getActivation()),
+                        gene.getActivation(),
+                        gene.getPadding()
+                    );
+                    break;
+                    
+                case MAX_POOL:
+                    builder.addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
+                    break;
+                    
+                case FULLY_CONNECTED:
+                    builder.addFullyConnectedLayer(
+                        LEARNING_RATE_FULLY_CONNECTED,
+                        new Linear()
+                    );
+                    break;
+            }
         }
 
-        // добавляем fully connected слой с активацией из хромосомы
-        return builder
-            .addFullyConnectedLayer(
-                LEARNING_RATE_FULLY_CONNECTED,
-                new Linear()
-            )
-            .build();
+        return builder.build();
     }
 
 }

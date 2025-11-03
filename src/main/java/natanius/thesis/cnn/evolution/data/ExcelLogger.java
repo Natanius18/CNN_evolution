@@ -50,7 +50,7 @@ public class ExcelLogger {
         row.createCell(2).setCellValue(totalParams);
         row.createCell(3).setCellValue(trainingTime);
         row.createCell(4).setCellValue(chromosome);
-        row.createCell(5).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm dd.MM.yyyy")));
+        row.createCell(5).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
         row.createCell(6).setCellValue(DATASET_FRACTION);
 
         sheet.autoSizeColumn(0);
@@ -74,7 +74,7 @@ public class ExcelLogger {
         Row header = sheet.createRow(0);
         String[] columns = {
             "Test Accuracy", "Train Accuracy",
-            "Total Parameters", "Training Time (s)", "Chromosome", "Date time", "Dataset fraction"
+            "Total Parameters", "Training Time for generation (s)", "Chromosome", "Date time", "Dataset fraction"
         };
         for (int i = 0; i < columns.length; i++) {
             header.createCell(i).setCellValue(columns[i]);

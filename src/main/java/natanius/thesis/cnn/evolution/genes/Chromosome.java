@@ -3,47 +3,43 @@ package natanius.thesis.cnn.evolution.genes;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
-import static natanius.thesis.cnn.evolution.data.Constants.CONV_LAYERS;
+import static natanius.thesis.cnn.evolution.data.Constants.MAX_CONV_BLOCKS;
+import static natanius.thesis.cnn.evolution.data.Constants.MIN_CONV_BLOCKS;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import natanius.thesis.cnn.evolution.activation.Activation;
 
 @Getter
 @AllArgsConstructor
 public class Chromosome {
 
-    private final int[] numFilters;
-    private final int[] filterSizes;
-    private final Activation activation;
-
-
+    private final List<LayerGene> layerGenes;
 
     public Chromosome() {
+        int numBlocks = MIN_CONV_BLOCKS + RANDOM.nextInt(MAX_CONV_BLOCKS - MIN_CONV_BLOCKS + 1);
+        layerGenes = new ArrayList<>();
 
-        // Генерация количества фильтров
-        numFilters = new int[CONV_LAYERS];
-        for (int i = 0; i < CONV_LAYERS; i++) {
-            numFilters[i] = ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)];
+        for (int i = 0; i < numBlocks; i++) {
+            int numFilters = ALLOWED_FILTERS[RANDOM.nextInt(ALLOWED_FILTERS.length)];
+            int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
+            var activation = ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)];
+            int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;  // same or valid
+
+            layerGenes.add(new LayerGene(LayerType.CONVOLUTION, numFilters, filterSize, activation, padding));
+            
+            if (RANDOM.nextBoolean()) {
+                layerGenes.add(new LayerGene(LayerType.MAX_POOL));
+            }
         }
-
-        // Генерация размеров фильтров
-        filterSizes = new int[CONV_LAYERS];
-        for (int i = 0; i < CONV_LAYERS; i++) {
-            filterSizes[i] = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
-        }
-
-        activation = ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)];
+        
+        layerGenes.add(new LayerGene(LayerType.FULLY_CONNECTED));
     }
 
     @Override
     public String toString() {
-        return "Chromosome{" +
-            "numFilters=" + Arrays.toString(numFilters) +
-            ", filterSizes=" + Arrays.toString(filterSizes) +
-            ", activation=" + activation.getClass().getSimpleName() +
-            '}';
+        return "Chromosome{layerGenes=" + layerGenes + '}';
     }
 }
