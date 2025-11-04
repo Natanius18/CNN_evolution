@@ -38,18 +38,17 @@ public class Constants {
     public static final int[] ALLOWED_POOL_WINDOWS = {2, 3};
     public static final int[] ALLOWED_POOL_STRIDES = {1, 2};
     public static final int[] ALLOWED_CONV_STRIDES = {1, 2};
-    public static final double LEARNING_RATE_FULLY_CONNECTED = 0.001;
+    public static final double LEARNING_RATE_FULLY_CONNECTED = 0.01;
 
     // Evolution-related parameters
     public static final int POPULATION_SIZE = 40;
-    public static final int GENERATIONS = 5;
+    public static final int GENERATIONS = 20;
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
-    public static final float DATASET_FRACTION = 0.1f;
+    public static final float DATASET_FRACTION = 0.01f;
 
 
-    public static final int EPOCHS = 5;
-    public static final boolean FAST_MODE = true;
+    public static final int EPOCHS = 3;
 //    public static final boolean DEBUG = false;
 }

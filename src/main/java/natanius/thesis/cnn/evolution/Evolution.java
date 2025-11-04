@@ -3,7 +3,6 @@ package natanius.thesis.cnn.evolution;
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
-import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
@@ -32,11 +31,9 @@ public class Evolution {
 
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
-        if (FAST_MODE) {
-            imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
-            imagesTest = imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
-            System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
-        }
+        imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
+        imagesTest = imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
+        System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
 
         if (MODE == 1) {
             testOneNetwork(imagesTrain, imagesTest);
