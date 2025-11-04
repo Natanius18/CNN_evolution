@@ -51,5 +51,5 @@ public class Constants {
 
     public static final int EPOCHS = 5;
     public static final boolean FAST_MODE = true;
-    public static final boolean DEBUG = false;
+//    public static final boolean DEBUG = false;
 }

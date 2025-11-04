@@ -3,7 +3,6 @@ package natanius.thesis.cnn.evolution;
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
-import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
@@ -11,7 +10,6 @@ import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateInitialPopulation;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import natanius.thesis.cnn.evolution.activation.Linear;
@@ -82,9 +80,9 @@ public class Evolution {
         for (int gen = 0; gen < GENERATIONS; gen++) {
             long start = now().getEpochSecond();
             System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
-            if (DEBUG) {
-                System.out.println(Arrays.toString(population.stream().map(Individual::getChromosome).toArray()));
-            }
+//            if (DEBUG) {
+//                System.out.println(Arrays.toString(population.stream().map(Individual::getChromosome).toArray()));
+//            }
 
 
             population = ga.evolve(population, trainSet, validationSet);
@@ -101,9 +99,9 @@ public class Evolution {
             float testAccuracy = neuralNetwork.test(imagesTest);
 
 
-            if (DEBUG) {
-                System.out.println(neuralNetwork);
-            }
+//            if (DEBUG) {
+//                System.out.println(neuralNetwork);
+//            }
 
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);

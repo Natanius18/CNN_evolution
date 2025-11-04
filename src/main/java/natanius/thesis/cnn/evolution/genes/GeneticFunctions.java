@@ -6,7 +6,6 @@ import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_STRIDES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_WINDOWS;
-import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.Constants.getLearningRate;
@@ -46,12 +45,12 @@ public class GeneticFunctions {
 
         Chromosome child = new Chromosome(childLayers);
 
-        if (DEBUG) {
-            System.out.println("\n--- Crossover ---");
-            System.out.println("Parent1: " + parent1);
-            System.out.println("Parent2: " + parent2);
-            System.out.println("Child:   " + child);
-        }
+//        if (DEBUG) {
+//            System.out.println("\n--- Crossover ---");
+//            System.out.println("Parent1: " + parent1);
+//            System.out.println("Parent2: " + parent2);
+//            System.out.println("Child:   " + child);
+//        }
 
         return child;
     }
@@ -143,11 +142,11 @@ public class GeneticFunctions {
         layers.add(new LayerGene(FULLY_CONNECTED));
         Chromosome mutated = new Chromosome(layers);
 
-        if (DEBUG) {
-            System.out.println("\n--- Mutation ---");
-            System.out.println("Before: " + individual);
-            System.out.println("After:  " + mutated);
-        }
+//        if (DEBUG) {
+//            System.out.println("\n--- Mutation ---");
+//            System.out.println("Before: " + individual);
+//            System.out.println("After:  " + mutated);
+//        }
 
         return mutated;
     }
