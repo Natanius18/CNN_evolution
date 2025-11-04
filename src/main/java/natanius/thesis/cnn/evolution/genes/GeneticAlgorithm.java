@@ -23,7 +23,7 @@ public class GeneticAlgorithm {
 
     private final EpochTrainer epochTrainer = new EpochTrainer();
 
-    public List<Individual> evolve(List<Individual> currentPopulation, List<Image> imagesTrain, List<Image> imagesTest) {
+    public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
 
         // 1. Оценка фитнеса
         IntStream.range(0, currentPopulation.size())
@@ -31,7 +31,7 @@ public class GeneticAlgorithm {
             .forEach(i -> {
                 Individual ind = currentPopulation.get(i);
                 if (ind.getFitness() == Float.MAX_VALUE) {
-                    ind.setFitness(evaluateFitness(ind, imagesTrain, imagesTest));
+                    ind.setFitness(evaluateFitness(ind, trainSet, validationSet));
                 }
                 System.out.println(Thread.currentThread().getName() + ": " + ind);
             });
@@ -79,11 +79,11 @@ public class GeneticAlgorithm {
         return nextGeneration;
     }
 
-    private float evaluateFitness(Individual ind, List<Image> imagesTrain, List<Image> imagesTest) {
+    private float evaluateFitness(Individual ind, List<Image> trainSet, List<Image> validationSet) {
         try {
             long start = now().getEpochSecond();
             NeuralNetwork network = buildNetworkFromChromosome(ind.getChromosome());
-            float accuracy = epochTrainer.train(network, imagesTrain, imagesTest);
+            float accuracy = epochTrainer.train(network, trainSet, validationSet);
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);
             return 100f - accuracy * 100f;  // чем меньше — тем лучше
@@ -91,7 +91,7 @@ public class GeneticAlgorithm {
         } catch (IllegalStateException e) {
             System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
             ind.setChromosome(new Chromosome());
-            return evaluateFitness(ind, imagesTrain, imagesTest);
+            return evaluateFitness(ind, trainSet, validationSet);
         }
     }
 

@@ -12,17 +12,17 @@ import natanius.thesis.cnn.evolution.data.Image;
 @Getter
 public class EpochTrainer {
 
-    public float train(NeuralNetwork neuralNetwork, List<Image> imagesTrain, List<Image> imagesTest) {
+    public float train(NeuralNetwork neuralNetwork, List<Image> trainSet, List<Image> validationSet) {
         float accuracy = 0;
         for (int i = 1; i <= EPOCHS; i++) {
             if (DEBUG) {
                 System.out.printf("===================================================================================== Epoch %d%n", i);
             }
-            shuffle(imagesTrain, RANDOM);
+            shuffle(trainSet, RANDOM);
 
-            neuralNetwork.train(imagesTrain);
+            neuralNetwork.train(trainSet);
 
-            accuracy = neuralNetwork.test(imagesTest);
+            accuracy = neuralNetwork.test(validationSet);
             if (DEBUG) {
                 System.out.println("Accuracy: " + accuracy);
             }

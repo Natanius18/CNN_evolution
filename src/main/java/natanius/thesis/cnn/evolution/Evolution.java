@@ -23,6 +23,7 @@ import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.genes.GeneticAlgorithm;
 import natanius.thesis.cnn.evolution.genes.Individual;
 import natanius.thesis.cnn.evolution.layers.Layer;
+import natanius.thesis.cnn.evolution.network.EpochTrainer;
 import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 import natanius.thesis.cnn.evolution.visualization.FormDigits;
@@ -77,6 +78,7 @@ public class Evolution {
 
     private static void runGeneticAlgorithm(List<Image> imagesTrain, List<Image> imagesTest) {
         GeneticAlgorithm ga = new GeneticAlgorithm();
+        EpochTrainer epochTrainer = new EpochTrainer();
 
         List<Individual> population = generateInitialPopulation();
 
@@ -100,7 +102,7 @@ public class Evolution {
 
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             NeuralNetwork neuralNetwork = buildNetworkFromChromosome(best.getChromosome());
-            neuralNetwork.train(imagesTrain);
+            epochTrainer.train(neuralNetwork, trainSet, validationSet);
             float trainAccuracy = neuralNetwork.test(trainSet);
             float testAccuracy = neuralNetwork.test(imagesTest);
 
@@ -116,7 +118,15 @@ public class Evolution {
                 .map(Layer::getParameterCount)
                 .reduce(Integer::sum).orElseThrow();
 
-            ExcelLogger.saveResults(testAccuracy, trainAccuracy, totalParams, trainingTime, best.getChromosome().toString());
+            ExcelLogger.saveResults(
+                gen + 1,
+                best.getFitness(),
+                testAccuracy,
+                trainAccuracy,
+                totalParams,
+                trainingTime,
+                best.getChromosome().toString()
+            );
 
             //     new Thread(new FormDigits(neuralNetwork)).start();
         }

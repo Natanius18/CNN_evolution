@@ -20,7 +20,9 @@ public class ExcelLogger {
 
     private static final String FILE_PATH = "models/training_results.xlsx";
 
-    public static synchronized void saveResults(float testAccuracy,
+    public static synchronized void saveResults(int generation,
+                                                float fitness,
+                                                float testAccuracy,
                                                 float trainAccuracy,
                                                 int totalParams,
                                                 long trainingTime,
@@ -45,21 +47,21 @@ public class ExcelLogger {
 
         int rowNum = sheet.getLastRowNum() + 1;
         Row row = sheet.createRow(rowNum);
-        row.createCell(0).setCellValue(testAccuracy);
-        row.createCell(1).setCellValue(trainAccuracy);
-        row.createCell(2).setCellValue(totalParams);
-        row.createCell(3).setCellValue(trainingTime);
-        row.createCell(4).setCellValue(chromosome);
-        row.createCell(5).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
-        row.createCell(6).setCellValue(DATASET_FRACTION);
+        row.createCell(0).setCellValue(generation);
+        row.createCell(1).setCellValue(fitness);
+        row.createCell(2).setCellValue(testAccuracy);
+        row.createCell(3).setCellValue(trainAccuracy);
+        row.createCell(4).setCellValue(trainAccuracy - testAccuracy);  // Overfitting gap
+        row.createCell(5).setCellValue(testAccuracy / totalParams * 1000);  // Parameters efficiency
+        row.createCell(6).setCellValue(totalParams);
+        row.createCell(7).setCellValue(trainingTime);
+        row.createCell(8).setCellValue(chromosome);
+        row.createCell(9).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        row.createCell(10).setCellValue(DATASET_FRACTION * 100 + "%");
 
-        sheet.autoSizeColumn(0);
-        sheet.autoSizeColumn(1);
-        sheet.autoSizeColumn(2);
-        sheet.autoSizeColumn(3);
-        sheet.autoSizeColumn(4);
-        sheet.autoSizeColumn(5);
-        sheet.autoSizeColumn(6);
+        for (int i = 0; i <= 10; i++) {
+            sheet.autoSizeColumn(i);
+        }
 
 
         try (FileOutputStream fos = new FileOutputStream(FILE_PATH)) {
@@ -73,8 +75,9 @@ public class ExcelLogger {
     private static void createHeader(Sheet sheet) {
         Row header = sheet.createRow(0);
         String[] columns = {
-            "Test Accuracy", "Train Accuracy",
-            "Total Parameters", "Training Time for generation (s)", "Chromosome", "Date time", "Dataset fraction"
+            "Generation", "Fitness", "Test Accuracy", "Train Accuracy",
+            "Overfitting Gap", "Params Efficiency (×1000)",
+            "Total Parameters", "Training Time for generation (s)", "Chromosome", "Date Time", "Dataset Fraction"
         };
         for (int i = 0; i < columns.length; i++) {
             header.createCell(i).setCellValue(columns[i]);
