@@ -1,6 +1,7 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static java.lang.Math.floorDiv;
+import static java.lang.Thread.currentThread;
 import static java.time.Instant.now;
 import static java.util.Comparator.comparingDouble;
 import static natanius.thesis.cnn.evolution.data.Constants.CROSSOVER_COUNT;
@@ -12,6 +13,7 @@ import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkF
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import natanius.thesis.cnn.evolution.data.Image;
@@ -26,6 +28,7 @@ public class GeneticAlgorithm {
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
 
         // 1. Оценка фитнеса
+        AtomicInteger processedCount = new AtomicInteger(0);
         IntStream.range(0, currentPopulation.size())
             .parallel()
             .forEach(i -> {
@@ -33,7 +36,9 @@ public class GeneticAlgorithm {
                 if (ind.getFitness() == Float.MAX_VALUE) {
                     ind.setFitness(evaluateFitness(ind, trainSet, validationSet));
                 }
-                System.out.println(Thread.currentThread().getName() + ": " + ind);
+                int processed = processedCount.incrementAndGet();
+                String threadName = currentThread().getName();
+                System.out.println("[" + processed + "/" + currentPopulation.size() + "], thread " + threadName.charAt(threadName.length() - 1) + ": " + ind);
             });
 
         // 2. Сортировка по фитнесу
@@ -98,6 +103,6 @@ public class GeneticAlgorithm {
     private static void printTimeTaken(long totalSeconds) {
         long minutes = floorDiv(totalSeconds, 60);
         long seconds = totalSeconds - minutes * 60;
-        System.out.printf("Time for one: %d:%d%n", minutes, seconds);
+        System.out.printf("Time for one: %d:%d ", minutes, seconds);
     }
 }
