@@ -18,7 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 @NoArgsConstructor(access = PRIVATE)
 public class ExcelLogger {
 
-    private static final String FILE_PATH = "models/training_results.xlsx";
+    private static final String FILE_PATH = "logs/training_results.xlsx";
 
     public static synchronized void saveResults(int generation,
                                                 float fitness,
