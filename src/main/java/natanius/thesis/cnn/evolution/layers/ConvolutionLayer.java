@@ -354,9 +354,8 @@ public class ConvolutionLayer extends Layer {
                 double[][] flippedFilter = flipArrayHorizontal(flipArrayVertical(currFilter[c]));
                 double[][] convResult = fullConvolve(flippedFilter, spacedError);
 
-                if (padding > 0) {
-                    convResult = removePadding(convResult);
-                }
+                // Обрізаємо до розміру входу
+                convResult = cropToSize(convResult, inRows, inCols, padding);
 
                 add(dLdOPreviousLayer.get(c), convResult);
             }
@@ -377,19 +376,18 @@ public class ConvolutionLayer extends Layer {
     }
 
 
-    private double[][] removePadding(double[][] input) {
-        if (padding == 0) {
-            return input;
+    private double[][] cropToSize(double[][] input, int targetRows, int targetCols, int padding) {
+        double[][] output = new double[targetRows][targetCols];
+        
+        int startRow = padding;
+        int startCol = padding;
+        
+        for (int i = 0; i < targetRows && (startRow + i) < input.length; i++) {
+            for (int j = 0; j < targetCols && (startCol + j) < input[0].length; j++) {
+                output[i][j] = input[startRow + i][startCol + j];
+            }
         }
-
-        int rows = input.length - 2 * padding;
-        int cols = input[0].length - 2 * padding;
-        double[][] output = new double[rows][cols];
-
-        for (int i = 0; i < rows; i++) {
-            System.arraycopy(input[i + padding], padding, output[i], 0, cols);
-        }
-
+        
         return output;
     }
 

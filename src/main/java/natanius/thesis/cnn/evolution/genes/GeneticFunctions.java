@@ -1,15 +1,16 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_CONV_STRIDES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_STRIDES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_WINDOWS;
-import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.Constants.getLearningRate;
+import static natanius.thesis.cnn.evolution.genes.LayerType.CONVOLUTION;
 import static natanius.thesis.cnn.evolution.genes.LayerType.FULLY_CONNECTED;
 import static natanius.thesis.cnn.evolution.genes.LayerType.MAX_POOL;
 
@@ -67,7 +68,7 @@ public class GeneticFunctions {
             // Изменить параметры случайного Conv слоя
             List<Integer> convIndices = new ArrayList<>();
             for (int i = 0; i < layers.size(); i++) {
-                if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+                if (layers.get(i).getType() == CONVOLUTION) {
                     convIndices.add(i);
                 }
             }
@@ -78,12 +79,14 @@ public class GeneticFunctions {
                 
                 int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
                 int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
+                int convStride = ALLOWED_CONV_STRIDES[RANDOM.nextInt(ALLOWED_CONV_STRIDES.length)];
                 layers.set(idx, new LayerGene(
-                    LayerType.CONVOLUTION,
+                    CONVOLUTION,
                     ALLOWED_FILTERS[minFilterIndex + RANDOM.nextInt(ALLOWED_FILTERS.length - minFilterIndex)],
                     filterSize,
                     ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
-                    padding
+                    padding,
+                    convStride
                 ));
             }
         } else if (mutationType < 0.5) {
@@ -94,12 +97,14 @@ public class GeneticFunctions {
             
             int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
             int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
+            int convStride = ALLOWED_CONV_STRIDES[RANDOM.nextInt(ALLOWED_CONV_STRIDES.length)];
             layers.add(pos, new LayerGene(
-                LayerType.CONVOLUTION,
+                CONVOLUTION,
                 ALLOWED_FILTERS[minFilterIndex + RANDOM.nextInt(ALLOWED_FILTERS.length - minFilterIndex)],
                 filterSize,
                 ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)],
-                padding
+                padding,
+                convStride
             ));
         } else if (mutationType < 0.7) {
             // Добавить/удалить MaxPool слой
@@ -118,7 +123,7 @@ public class GeneticFunctions {
                 // Добавить MaxPool после случайного Conv
                 List<Integer> convIndices = new ArrayList<>();
                 for (int i = 0; i < layers.size(); i++) {
-                    if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+                    if (layers.get(i).getType() == CONVOLUTION) {
                         convIndices.add(i);
                     }
                 }
@@ -156,7 +161,7 @@ public class GeneticFunctions {
                     builder.addConvolutionLayer(
                         gene.getNumFilters(),
                         gene.getFilterSize(),
-                        CONV_STEP_SIZE,
+                        gene.getConvStride(),
                         getLearningRate(gene.getActivation()),
                         gene.getActivation(),
                         gene.getPadding()
@@ -189,7 +194,7 @@ public class GeneticFunctions {
 
     private static int getPreviousConvFilters(List<LayerGene> layers, int currentIdx) {
         for (int i = currentIdx - 1; i >= 0; i--) {
-            if (layers.get(i).getType() == LayerType.CONVOLUTION) {
+            if (layers.get(i).getType() == CONVOLUTION) {
                 return layers.get(i).getNumFilters();
             }
         }

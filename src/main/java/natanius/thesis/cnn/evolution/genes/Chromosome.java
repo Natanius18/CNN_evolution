@@ -1,6 +1,7 @@
 package natanius.thesis.cnn.evolution.genes;
 
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_CONV_STRIDES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FC_SIZES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
@@ -40,6 +41,7 @@ public class Chromosome {
      *   <li><b>Monotonic filter growth:</b> Кількість фільтрів тільки збільшується або залишається константною
      *       (8 → 16 → 32, ніколи 32 → 16)</li>
      *   <li>Розміри фільтрів: 3×3, 5×5, 7×7</li>
+     *   <li>Stride: 1 або 2 - випадково</li>
      *   <li>Padding: Same (filterSize/2) або Valid (0) - випадково</li>
      *   <li>Activation: ReLU, LeakyReLU, Sigmoid - випадково</li>
      * </ul>
@@ -55,7 +57,7 @@ public class Chromosome {
      * <p><b>ОБМЕЖЕННЯ НА SPATIAL РОЗМІРИ:</b>
      * <ul>
      *   <li>Мінімальний розмір після Conv: 3×3 (інакше блок пропускається)</li>
-     *   <li>Формула: output_size = (input_size - filter_size + 2×padding) + 1</li>
+     *   <li>Формула Conv: output_size = (input_size - filter_size + 2×padding) / stride + 1</li>
      *   <li>Після pooling: output_size = input_size / 2</li>
      * </ul>
      *
@@ -94,13 +96,14 @@ public class Chromosome {
             int filterSize = ALLOWED_FILTER_SIZES[RANDOM.nextInt(ALLOWED_FILTER_SIZES.length)];
             var activation = ACTIVATION_STRATEGIES[RANDOM.nextInt(ACTIVATION_STRATEGIES.length)];
             int padding = RANDOM.nextBoolean() ? filterSize / 2 : 0;
+            int convStride = ALLOWED_CONV_STRIDES[RANDOM.nextInt(ALLOWED_CONV_STRIDES.length)];
 
-            int newSize = (spatialSize - filterSize + 2 * padding) + 1;
+            int newSize = (spatialSize - filterSize + 2 * padding) / convStride + 1;
             if (newSize < 3) continue;
             spatialSize = newSize;
             currentFilters = numFilters;
 
-            layerGenes.add(new LayerGene(CONVOLUTION, numFilters, filterSize, activation, padding));
+            layerGenes.add(new LayerGene(CONVOLUTION, numFilters, filterSize, activation, padding, convStride));
 
             if (spatialSize >= 6 && poolingCount < maxPooling && RANDOM.nextBoolean()) {
                 int poolWindow = ALLOWED_POOL_WINDOWS[RANDOM.nextInt(ALLOWED_POOL_WINDOWS.length)];

@@ -13,8 +13,9 @@ public class LayerGene {
     private final Integer fcSize;
     private final Integer poolWindow;
     private final Integer poolStride;
+    private final Integer convStride;
 
-    public LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, int padding) {
+    public LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, int padding, int convStride) {
         this.type = type;
         this.numFilters = numFilters;
         this.filterSize = filterSize;
@@ -23,6 +24,7 @@ public class LayerGene {
         this.fcSize = null;
         this.poolWindow = null;
         this.poolStride = null;
+        this.convStride = convStride;
     }
 
     public LayerGene(LayerType type, Integer fcSize, Activation activation) {
@@ -34,6 +36,7 @@ public class LayerGene {
         this.fcSize = fcSize;
         this.poolWindow = null;
         this.poolStride = null;
+        this.convStride = null;
     }
 
     public LayerGene(LayerType type, int poolWindow, int poolStride) {
@@ -45,6 +48,7 @@ public class LayerGene {
         this.fcSize = null;
         this.poolWindow = poolWindow;
         this.poolStride = poolStride;
+        this.convStride = null;
     }
 
     public LayerGene(LayerType type) {
@@ -56,6 +60,7 @@ public class LayerGene {
         this.fcSize = null;
         this.poolWindow = null;
         this.poolStride = null;
+        this.convStride = null;
     }
 
     @Override
@@ -70,8 +75,8 @@ public class LayerGene {
             }
             case CONVOLUTION -> {
                 String paddingType = padding == 0 ? "valid" : "same";
-                return String.format("CONVOLUTION (%d filters %dx%d, %s padding + %s)",
-                    numFilters, filterSize, filterSize, paddingType,
+                return String.format("CONVOLUTION (%d filters %dx%d, stride=%d, %s padding + %s)",
+                    numFilters, filterSize, filterSize, convStride, paddingType,
                     activation.getClass().getSimpleName());
             }
             default -> {

@@ -21,13 +21,12 @@ public class Constants {
     public static final int SCALE_FACTOR = 255;
     public static final double LEAK = 0.01;
     public static final int[] ALLOWED_FILTER_SIZES = {3, 5, 7};
-    public static final int[] ALLOWED_FILTERS = {4, 8, 16}; //, 32, 64};
+    public static final int[] ALLOWED_FILTERS = {4, 8, 16, 32, 64};
     public static final Activation[] ACTIVATION_STRATEGIES = {new ReLU(), new LeakyReLU(), new Sigmoid()};
 
     public static final int MIN_CONV_BLOCKS = 1;
     public static final int MAX_CONV_BLOCKS = 4;
     public static final int MAX_FC_LAYERS = 3;  // hidden + output
-    public static final int CONV_STEP_SIZE = 1;
     public static double getLearningRate(Activation activation) {
         if (activation instanceof Sigmoid) {
             return 0.01;
@@ -38,6 +37,7 @@ public class Constants {
 
     public static final int[] ALLOWED_POOL_WINDOWS = {2, 3};
     public static final int[] ALLOWED_POOL_STRIDES = {1, 2};
+    public static final int[] ALLOWED_CONV_STRIDES = {1, 2};
     public static final double LEARNING_RATE_FULLY_CONNECTED = 0.001;
 
     // Evolution-related parameters
@@ -46,7 +46,7 @@ public class Constants {
     public static final int ELITE_COUNT = (int) (POPULATION_SIZE * 0.1);       // 10%
     public static final int CROSSOVER_COUNT = (int) (POPULATION_SIZE * 0.5);  // 50%
     public static final int MUTANT_COUNT = (int) (POPULATION_SIZE * 0.3);    // 30%
-    public static final float DATASET_FRACTION = 0.005f;
+    public static final float DATASET_FRACTION = 0.001f;
 
 
     public static final int EPOCHS = 5;
