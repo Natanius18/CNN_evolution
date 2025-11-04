@@ -36,8 +36,8 @@ public class Constants {
         }
     }
 
-    public static final int MAX_POOL_STEP_SIZE = 2; //todo google what are valid nums
-    public static final int MAX_POOL_WINDOW_SIZE = 2;
+    public static final int[] ALLOWED_POOL_WINDOWS = {2, 3};
+    public static final int[] ALLOWED_POOL_STRIDES = {1, 2};
     public static final double LEARNING_RATE_FULLY_CONNECTED = 0.001;
 
     // Evolution-related parameters

@@ -11,6 +11,8 @@ public class LayerGene {
     private final Activation activation;
     private final int padding;
     private final Integer fcSize;
+    private final Integer poolWindow;
+    private final Integer poolStride;
 
     public LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, int padding) {
         this.type = type;
@@ -19,6 +21,8 @@ public class LayerGene {
         this.activation = activation;
         this.padding = padding;
         this.fcSize = null;
+        this.poolWindow = null;
+        this.poolStride = null;
     }
 
     public LayerGene(LayerType type, Integer fcSize, Activation activation) {
@@ -28,6 +32,19 @@ public class LayerGene {
         this.activation = activation;
         this.padding = 0;
         this.fcSize = fcSize;
+        this.poolWindow = null;
+        this.poolStride = null;
+    }
+
+    public LayerGene(LayerType type, int poolWindow, int poolStride) {
+        this.type = type;
+        this.numFilters = null;
+        this.filterSize = null;
+        this.activation = null;
+        this.padding = 0;
+        this.fcSize = null;
+        this.poolWindow = poolWindow;
+        this.poolStride = poolStride;
     }
 
     public LayerGene(LayerType type) {
@@ -37,13 +54,15 @@ public class LayerGene {
         this.activation = null;
         this.padding = 0;
         this.fcSize = null;
+        this.poolWindow = null;
+        this.poolStride = null;
     }
 
     @Override
     public String toString() {
         switch (type) {
             case MAX_POOL -> {
-                return "MAX_POOL";
+                return String.format("MAX_POOL (%dx%d, stride=%d)", poolWindow, poolWindow, poolStride);
             }
             case FULLY_CONNECTED -> {
                 String act = activation != null ? activation.getClass().getSimpleName() : "Linear";

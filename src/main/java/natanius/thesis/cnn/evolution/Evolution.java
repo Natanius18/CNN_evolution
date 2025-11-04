@@ -2,8 +2,6 @@ package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
-import static natanius.thesis.cnn.evolution.OverfitTest.testOverfitting;
-import static natanius.thesis.cnn.evolution.WeightUpdateTest.testWeightUpdates;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.FAST_MODE;
@@ -46,10 +44,6 @@ public class Evolution {
             testOneNetwork(imagesTrain, imagesTest);
         } else if (MODE == 2) {
             runGeneticAlgorithm(imagesTrain, imagesTest);
-        } else if (MODE == 3) {
-            testOverfitting(imagesTrain);
-        } else if (MODE == 4) {
-            testWeightUpdates(imagesTrain);
         }
     }
 

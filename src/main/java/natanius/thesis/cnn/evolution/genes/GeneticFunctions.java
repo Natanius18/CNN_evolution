@@ -3,13 +3,15 @@ package natanius.thesis.cnn.evolution.genes;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTERS;
 import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_FILTER_SIZES;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_STRIDES;
+import static natanius.thesis.cnn.evolution.data.Constants.ALLOWED_POOL_WINDOWS;
 import static natanius.thesis.cnn.evolution.data.Constants.CONV_STEP_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DEBUG;
 import static natanius.thesis.cnn.evolution.data.Constants.LEARNING_RATE_FULLY_CONNECTED;
-import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_STEP_SIZE;
-import static natanius.thesis.cnn.evolution.data.Constants.MAX_POOL_WINDOW_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.Constants.getLearningRate;
+import static natanius.thesis.cnn.evolution.genes.LayerType.FULLY_CONNECTED;
+import static natanius.thesis.cnn.evolution.genes.LayerType.MAX_POOL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,10 +38,10 @@ public class GeneticFunctions {
         childLayers.addAll(p2WithoutFC.subList(cutPoint, p2WithoutFC.size()));
 
         if (childLayers.isEmpty()) {
-            childLayers.add(p1WithoutFC.get(0));
+            childLayers.add(p1WithoutFC.getFirst());
         }
         
-        childLayers.add(new LayerGene(LayerType.FULLY_CONNECTED));
+        childLayers.add(new LayerGene(FULLY_CONNECTED));
 
         Chromosome child = new Chromosome(childLayers);
 
@@ -57,7 +59,7 @@ public class GeneticFunctions {
     public static Chromosome mutate(Chromosome individual) {
         List<LayerGene> layers = new ArrayList<>(individual.getLayerGenes());
         // Убираем FC слой для мутации
-        layers.remove(layers.size() - 1);
+        layers.removeLast();
         
         double mutationType = RANDOM.nextDouble();
 
@@ -105,7 +107,7 @@ public class GeneticFunctions {
                 // Удалить случайный MaxPool
                 List<Integer> poolIndices = new ArrayList<>();
                 for (int i = 0; i < layers.size(); i++) {
-                    if (layers.get(i).getType() == LayerType.MAX_POOL) {
+                    if (layers.get(i).getType() == MAX_POOL) {
                         poolIndices.add(i);
                     }
                 }
@@ -122,7 +124,9 @@ public class GeneticFunctions {
                 }
                 if (!convIndices.isEmpty()) {
                     int idx = convIndices.get(RANDOM.nextInt(convIndices.size()));
-                    layers.add(idx + 1, new LayerGene(LayerType.MAX_POOL));
+                    int poolWindow = ALLOWED_POOL_WINDOWS[RANDOM.nextInt(ALLOWED_POOL_WINDOWS.length)];
+                    int poolStride = ALLOWED_POOL_STRIDES[RANDOM.nextInt(ALLOWED_POOL_STRIDES.length)];
+                    layers.add(idx + 1, new LayerGene(MAX_POOL, poolWindow, poolStride));
                 }
             }
         } else if (layers.size() > 2) {
@@ -131,7 +135,7 @@ public class GeneticFunctions {
             layers.remove(idx);
         }
         
-        layers.add(new LayerGene(LayerType.FULLY_CONNECTED));
+        layers.add(new LayerGene(FULLY_CONNECTED));
         Chromosome mutated = new Chromosome(layers);
 
         if (DEBUG) {
@@ -160,7 +164,7 @@ public class GeneticFunctions {
                     break;
                     
                 case MAX_POOL:
-                    builder.addMaxPoolLayer(MAX_POOL_WINDOW_SIZE, MAX_POOL_STEP_SIZE);
+                    builder.addMaxPoolLayer(gene.getPoolWindow(), gene.getPoolStride());
                     break;
                     
                 case FULLY_CONNECTED:
