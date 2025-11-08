@@ -1,17 +1,16 @@
 package natanius.thesis.cnn.evolution.layers;
 
+import static natanius.thesis.cnn.evolution.data.Constants.L2_REGULARIZATION_LAMBDA;
 import static natanius.thesis.cnn.evolution.data.Constants.OUTPUT_CLASSES;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.util.List;
-import lombok.Getter;
 import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.activation.LeakyReLU;
 import natanius.thesis.cnn.evolution.activation.Linear;
 import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
-@Getter // todo remove
 public class FullyConnectedLayer extends Layer {
 
     private final Activation activation;
@@ -25,6 +24,7 @@ public class FullyConnectedLayer extends Layer {
 
     private double[] lastZ;
     private double[] lastX;
+    private double l2Lambda = L2_REGULARIZATION_LAMBDA;
 
     public FullyConnectedLayer(Activation activation, int inLength, double learningRate) {
         this(activation, inLength, OUTPUT_CLASSES, learningRate);
@@ -227,7 +227,8 @@ public class FullyConnectedLayer extends Layer {
             double[] wRow = weights[i];
             for (int j = 0; j < outLength; j++) {
                 double dLdWij = aPrevI * delta[j];
-                wRow[j] -= learningRate * dLdWij;
+                // L2 регуляризація: -η (∂L/∂W + λW)
+                wRow[j] -= learningRate * (dLdWij + l2Lambda * wRow[j]);
             }
         }
 

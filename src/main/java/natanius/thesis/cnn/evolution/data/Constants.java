@@ -39,6 +39,7 @@ public class Constants {
     public static final int[] ALLOWED_POOL_STRIDES = {1, 2};
     public static final int[] ALLOWED_CONV_STRIDES = {1, 2};
     public static final double LEARNING_RATE_FULLY_CONNECTED = 0.01;
+    public static final double L2_REGULARIZATION_LAMBDA = 0;
 
     // Evolution-related parameters
     public static final int POPULATION_SIZE = 40;

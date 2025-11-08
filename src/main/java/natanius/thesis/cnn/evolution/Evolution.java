@@ -11,8 +11,8 @@ import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateIn
 
 import java.util.Comparator;
 import java.util.List;
+import natanius.thesis.cnn.evolution.activation.LeakyReLU;
 import natanius.thesis.cnn.evolution.activation.Linear;
-import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.data.ExcelLogger;
 import natanius.thesis.cnn.evolution.data.Image;
 import natanius.thesis.cnn.evolution.genes.GeneticAlgorithm;
@@ -43,11 +43,10 @@ public class Evolution {
     }
 
     private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
+
         NeuralNetwork network = new NetworkBuilder()
-            .addConvolutionLayer(6, 5, 1, 0.001, new ReLU(), 0)
-            .addMaxPoolLayer(2, 2)
-            .addConvolutionLayer(16, 5, 1, 0.001, new ReLU(), 0)
-            .addMaxPoolLayer(2, 2)
+            .addConvolutionLayer(8, 3, 1, 0.001, new LeakyReLU(), 0)
+            .addMaxPoolLayer(2, 1)
             .addFullyConnectedLayer(0.001, new Linear())
             .build();
 

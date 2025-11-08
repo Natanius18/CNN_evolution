@@ -1,18 +1,17 @@
 package natanius.thesis.cnn.evolution.layers;
 
+import static natanius.thesis.cnn.evolution.data.Constants.L2_REGULARIZATION_LAMBDA;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.add;
 import static natanius.thesis.cnn.evolution.data.MatrixUtility.multiply;
 
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Getter;
 import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.activation.LeakyReLU;
 import natanius.thesis.cnn.evolution.activation.ReLU;
 import natanius.thesis.cnn.evolution.activation.Sigmoid;
 
-@Getter //todo remove
 public class ConvolutionLayer extends Layer {
 
     private final int filterSize;
@@ -27,6 +26,7 @@ public class ConvolutionLayer extends Layer {
     private final Activation activation;
     private List<double[][]> preActivationOutputs;
     private final double[] biases;
+    private double l2Lamda = L2_REGULARIZATION_LAMBDA;
 
     public ConvolutionLayer(int filterSize,
                             int stepSize,
@@ -262,7 +262,6 @@ public class ConvolutionLayer extends Layer {
      * </pre>
      *
      * @param input   вхідна матриця розміром [rows][cols]
-     * @param padding кількість нулів для додавання з кожної сторони
      * @return матриця розміром [rows + 2×padding][cols + 2×padding] з доданим padding
      */
     private double[][] applyPadding(double[][] input) {
@@ -364,6 +363,12 @@ public class ConvolutionLayer extends Layer {
         // КРОК 3: Оновлення ваг
         for (int f = 0; f < filters.size(); f++) {
             for (int c = 0; c < inLength; c++) {
+                // Добавляем L2 штраф к градиенту
+                for (int i = 0; i < filterSize; i++) {
+                    for (int j = 0; j < filterSize; j++) {
+                        filtersDelta.get(f)[c][i][j] += l2Lamda * filters.get(f)[c][i][j];
+                    }
+                }
                 multiply(filtersDelta.get(f)[c], -learningRate);
                 add(filters.get(f)[c], filtersDelta.get(f)[c]);
             }
