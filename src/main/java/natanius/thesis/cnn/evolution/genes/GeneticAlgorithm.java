@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import natanius.thesis.cnn.evolution.data.Image;
+import natanius.thesis.cnn.evolution.layers.Layer;
 import natanius.thesis.cnn.evolution.network.EpochTrainer;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
@@ -91,7 +92,14 @@ public class GeneticAlgorithm {
             float accuracy = epochTrainer.train(network, trainSet, validationSet);
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);
-            return 100f - accuracy * 100f;  // чем меньше — тем лучше
+            
+            int totalParams = network.getLayers().stream()
+                .mapToInt(Layer::getParameterCount)
+                .sum();
+            
+            float error = 100f - accuracy * 100f;
+            float complexityPenalty = totalParams / 100_000f;
+            return error + complexityPenalty;
 
         } catch (IllegalStateException e) {
             System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
