@@ -54,11 +54,14 @@ public class Evolution {
 //        EpochTrainer epochTrainer = new EpochTrainer();
 //        epochTrainer.train(network, imagesTrain, imagesTest);
 
+        System.out.println(network);
+
         for (int epoch = 1; epoch <= 10; epoch++) {
             long start = now().getEpochSecond();
             network.train(imagesTrain);
-            float accuracy = network.test(imagesTest);
-            System.out.printf("Epoch %d: Test Accuracy = %.2f%%%n", epoch, accuracy);
+            float testAccuracy = network.test(imagesTest);
+            float trainAccuracy = network.test(imagesTrain);
+            System.out.printf("Epoch %d: Train Accuracy = %.2f, Test Accuracy = %.2f%%%n", epoch, trainAccuracy, testAccuracy);
             printTimeTaken(now().getEpochSecond() - start);
         }
 
@@ -104,8 +107,8 @@ public class Evolution {
             printTimeTaken(trainingTime);
 
             int totalParams = neuralNetwork.getLayers().stream()
-                .map(Layer::getParameterCount)
-                .reduce(Integer::sum).orElseThrow();
+                .mapToInt(Layer::getParameterCount)
+                .sum();
 
             ExcelLogger.saveResults(
                 gen + 1,

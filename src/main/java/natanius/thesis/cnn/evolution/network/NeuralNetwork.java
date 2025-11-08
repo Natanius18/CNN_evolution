@@ -14,7 +14,6 @@ public class NeuralNetwork {
     private final List<Layer> layers;
 
     private static final String RESET = "\u001B[0m";
-    private static final String RED = "\u001B[31m";
     private static final String CYAN = "\u001B[36m";  // Titles
     private static final String GREEN = "\u001B[32m"; // Convolution
     private static final String BLUE = "\u001B[34m";  // Max Pooling
@@ -118,9 +117,8 @@ public class NeuralNetwork {
         int correct = 0;
 
         int size = images.size();
-        for (int i = 0; i < size; i++) {
+        for (Image img : images) {
 //            printProgress(i, size, "Testing         ");
-            Image img = images.get(i);
             int guess = guess(img);
 
             if (guess == img.label()) {
@@ -135,12 +133,9 @@ public class NeuralNetwork {
 
 
     public void train(List<Image> images) {
-        int size = images.size();
-
-        for (int i = 0; i < size; i++) {
+        for (Image img : images) {
 //            printProgress(i, size, "Training        ");
 
-            Image img = images.get(i);
             List<double[][]> inList = new ArrayList<>();
             inList.add(img.data());
 
@@ -196,9 +191,9 @@ public class NeuralNetwork {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append(CYAN).append("\n╔════════════════════════════════════════════════════════════════════════╗\n");
-        sb.append("║ ").append(centerText("🧠 NEURAL NETWORK ARCHITECTURE 🧠", 70)).append(" ║\n");
-        sb.append("╠════════════════════════════════════════════════════════════════════════╣\n").append(RESET);
+        sb.append(CYAN).append("\n╔════════════════════════════════════════════════════════════════════════════════════╗\n");
+        sb.append("║ ").append(centerText("🧠 NEURAL NETWORK ARCHITECTURE 🧠", 81)).append(" ║\n");
+        sb.append("╠════════════════════════════════════════════════════════════════════════════════════╣\n").append(RESET);
 
         int totalParams = 0;
 
@@ -215,14 +210,14 @@ public class NeuralNetwork {
                 color = (layer instanceof FullyConnectedLayer) ? MAGENTA : RESET;
             }
 
-            sb.append(color).append("║ ").append(centerText(layer.toString(), 70)).append(" ║\n").append(RESET);
+            sb.append(color).append("║ ").append(centerText(layer.toString(), 82)).append(" ║\n").append(RESET);
 
             if (i < layers.size() - 1) {
-                sb.append("║                                  ▼                                     ║\n");
+                sb.append("║                                        ▼                                           ║\n");
             }
         }
 
-        sb.append("╚════════════════════════════════════════════════════════════════════════╝\n");
+        sb.append("╚════════════════════════════════════════════════════════════════════════════════════╝\n");
         sb.append(YELLOW).append("📊 Total Layers: ").append(layers.size())
             .append(" | Total Parameters: ").append(totalParams).append(RESET).append("\n");
 
