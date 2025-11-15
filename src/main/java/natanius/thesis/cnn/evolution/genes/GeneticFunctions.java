@@ -36,23 +36,10 @@ public class GeneticFunctions {
         List<LayerGene> childLayers = new ArrayList<>();
         childLayers.addAll(p1WithoutFC.subList(0, cutPoint));
         childLayers.addAll(p2WithoutFC.subList(cutPoint, p2WithoutFC.size()));
-
-        if (childLayers.isEmpty()) {
-            childLayers.add(p1WithoutFC.getFirst());
-        }
         
         childLayers.add(new LayerGene(FULLY_CONNECTED));
 
-        Chromosome child = new Chromosome(childLayers);
-
-//        if (DEBUG) {
-//            System.out.println("\n--- Crossover ---");
-//            System.out.println("Parent1: " + parent1);
-//            System.out.println("Parent2: " + parent2);
-//            System.out.println("Child:   " + child);
-//        }
-
-        return child;
+        return new Chromosome(childLayers);
     }
 
     // Мутация: случайная перестановка или замена значений

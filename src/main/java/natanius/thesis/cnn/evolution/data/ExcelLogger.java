@@ -23,6 +23,7 @@ public class ExcelLogger {
     public static synchronized void saveResults(int generation,
                                                 float fitness,
                                                 float testAccuracy,
+                                                float validationAccuracy,
                                                 float trainAccuracy,
                                                 int totalParams,
                                                 long trainingTime,
@@ -49,15 +50,16 @@ public class ExcelLogger {
         Row row = sheet.createRow(rowNum);
         row.createCell(0).setCellValue(generation);
         row.createCell(1).setCellValue(fitness);
-        row.createCell(2).setCellValue(testAccuracy);
-        row.createCell(3).setCellValue(trainAccuracy);
-        row.createCell(4).setCellValue(trainAccuracy - testAccuracy);  // Overfitting gap
-        row.createCell(5).setCellValue(testAccuracy / totalParams * 1000);  // Parameters efficiency
-        row.createCell(6).setCellValue(totalParams);
-        row.createCell(7).setCellValue(trainingTime);
-        row.createCell(8).setCellValue(chromosome);
-        row.createCell(9).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
-        row.createCell(10).setCellValue(DATASET_FRACTION * 100 + "%");
+        row.createCell(2).setCellValue(trainAccuracy);
+        row.createCell(3).setCellValue(validationAccuracy);
+        row.createCell(4).setCellValue(testAccuracy);
+        row.createCell(5).setCellValue(trainAccuracy - testAccuracy);  // Overfitting gap
+        row.createCell(6).setCellValue(testAccuracy / totalParams * 1000);  // Parameters efficiency
+        row.createCell(7).setCellValue(totalParams);
+        row.createCell(8).setCellValue(trainingTime);
+        row.createCell(9).setCellValue(chromosome);
+        row.createCell(10).setCellValue(LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+        row.createCell(11).setCellValue(DATASET_FRACTION * 100 + "%");
 
         for (int i = 0; i <= 10; i++) {
             sheet.autoSizeColumn(i);
@@ -75,7 +77,7 @@ public class ExcelLogger {
     private static void createHeader(Sheet sheet) {
         Row header = sheet.createRow(0);
         String[] columns = {
-            "Generation", "Fitness", "Test Accuracy", "Train Accuracy",
+            "Generation", "Fitness", "Train Accuracy", "Validation Accuracy", "Test Accuracy",
             "Overfitting Gap", "Params Efficiency (×1000)",
             "Total Parameters", "Training Time for generation (s)", "Chromosome", "Date Time", "Dataset Fraction"
         };

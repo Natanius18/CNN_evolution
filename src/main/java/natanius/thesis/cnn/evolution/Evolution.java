@@ -26,6 +26,8 @@ import natanius.thesis.cnn.evolution.visualization.FormDigits;
 public class Evolution {
 
     private static final int MODE = 2;
+    private static final GeneticAlgorithm GA = new GeneticAlgorithm();
+    private static final EpochTrainer EPOCH_TRAINER = new EpochTrainer();
 
     public static void main(String[] args) {
 
@@ -68,11 +70,8 @@ public class Evolution {
     }
 
     private static void runGeneticAlgorithm(List<Image> imagesTrain, List<Image> imagesTest) {
-        GeneticAlgorithm ga = new GeneticAlgorithm();
-        EpochTrainer epochTrainer = new EpochTrainer();
 
         List<Individual> population = generateInitialPopulation();
-
 
         List<Image> validationSet = imagesTrain.subList(0, imagesTrain.size() / 10);
         List<Image> trainSet = imagesTrain.subList(imagesTrain.size() / 10, imagesTrain.size());
@@ -84,7 +83,7 @@ public class Evolution {
 //            }
 
 
-            population = ga.evolve(population, trainSet, validationSet);
+            population = GA.evolve(population, trainSet, validationSet);
 
             // Найдём лучшую архитектуру
             Individual best = population.stream()
@@ -92,35 +91,41 @@ public class Evolution {
                 .orElseThrow();
 
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
-            NeuralNetwork neuralNetwork = buildNetworkFromChromosome(best.getChromosome());
-            epochTrainer.train(neuralNetwork, trainSet, validationSet);
-            float trainAccuracy = neuralNetwork.test(trainSet);
-            float testAccuracy = neuralNetwork.test(imagesTest);
+            trainAndSaveResults(imagesTest, best, trainSet, validationSet, start, gen);
+
+            //     new Thread(new FormDigits(neuralNetwork)).start();
+        }
+    }
+
+    private static void trainAndSaveResults(List<Image> imagesTest, Individual best, List<Image> trainSet, List<Image> validationSet, long start, int gen) {
+        NeuralNetwork neuralNetwork = buildNetworkFromChromosome(best.getChromosome());
+        EPOCH_TRAINER.train(neuralNetwork, trainSet, validationSet);
+        float trainAccuracy = neuralNetwork.test(trainSet);
+        float validationAccuracy = neuralNetwork.test(validationSet);
+        float testAccuracy = neuralNetwork.test(imagesTest);
 
 
 //            if (DEBUG) {
 //                System.out.println(neuralNetwork);
 //            }
 
-            long trainingTime = now().getEpochSecond() - start;
-            printTimeTaken(trainingTime);
+        long trainingTime = now().getEpochSecond() - start;
+        printTimeTaken(trainingTime);
 
-            int totalParams = neuralNetwork.getLayers().stream()
-                .mapToInt(Layer::getParameterCount)
-                .sum();
+        int totalParams = neuralNetwork.getLayers().stream()
+            .mapToInt(Layer::getParameterCount)
+            .sum();
 
-            ExcelLogger.saveResults(
-                gen + 1,
-                best.getFitness(),
-                testAccuracy,
-                trainAccuracy,
-                totalParams,
-                trainingTime,
-                best.getChromosome().toString()
-            );
-
-            //     new Thread(new FormDigits(neuralNetwork)).start();
-        }
+        ExcelLogger.saveResults(
+            gen + 1,
+            best.getFitness(),
+            testAccuracy,
+            validationAccuracy,
+            trainAccuracy,
+            totalParams,
+            trainingTime,
+            best.getChromosome().toString()
+        );
     }
 
 

@@ -10,6 +10,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.MUTANT_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
+import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.crossover;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,8 +28,18 @@ public class GeneticAlgorithm {
     private final EpochTrainer epochTrainer = new EpochTrainer();
 
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
+        evaluateFitnessForAll(currentPopulation, trainSet, validationSet);
 
-        // 1. Оценка фитнеса
+        currentPopulation.sort(comparingDouble(Individual::getFitness));
+
+        List<Individual> nextGeneration = new ArrayList<>(currentPopulation.subList(0, ELITE_COUNT));
+        addChildrenOfElite(currentPopulation, nextGeneration);
+        addMutants(currentPopulation, nextGeneration);
+        addRandomImmigrants(nextGeneration);
+        return nextGeneration;
+    }
+
+    private void evaluateFitnessForAll(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
         AtomicInteger processedCount = new AtomicInteger(0);
         IntStream.range(0, currentPopulation.size())
             .parallel()
@@ -43,16 +54,9 @@ public class GeneticAlgorithm {
                 System.out.println("[" + processed + "/" + currentPopulation.size() + "], thread " +
                     (split.length > 1 ? split[split.length - 1] : "0") + ": " + ind);
             });
+    }
 
-        // 2. Сортировка по фитнесу
-        currentPopulation.sort(comparingDouble(Individual::getFitness));
-
-        int size = currentPopulation.size();
-
-        // Элита
-        List<Individual> nextGeneration = new ArrayList<>(currentPopulation.subList(0, ELITE_COUNT));
-
-        // Потомки элиты
+    private static void addChildrenOfElite(List<Individual> currentPopulation, List<Individual> nextGeneration) {
         while (nextGeneration.size() < ELITE_COUNT + CROSSOVER_COUNT) {
             Individual p1 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
             Individual p2 = currentPopulation.get(RANDOM.nextInt(ELITE_COUNT));
@@ -67,24 +71,24 @@ public class GeneticAlgorithm {
                 }
             }
 
-            Chromosome childChromosome = GeneticFunctions.crossover(
-                p1.getChromosome(), p2.getChromosome());
+            System.out.println("crossover: " + p1.getChromosome() + " + " + p2.getChromosome());
+            Chromosome childChromosome = crossover(p1.getChromosome(), p2.getChromosome());
             nextGeneration.add(new Individual(childChromosome));
         }
+    }
 
-        // Мутанты
+    private static void addMutants(List<Individual> currentPopulation, List<Individual> nextGeneration) {
         while (nextGeneration.size() < ELITE_COUNT + CROSSOVER_COUNT + MUTANT_COUNT) {
-            Individual base = currentPopulation.get(RANDOM.nextInt(size)); // может быть не из элиты
+            Individual base = currentPopulation.get(RANDOM.nextInt(POPULATION_SIZE)); // може бути не з еліти
             Chromosome mutated = GeneticFunctions.mutate(base.getChromosome());
             nextGeneration.add(new Individual(mutated));
         }
+    }
 
-        // Случайные иммигранты
-        while (nextGeneration.size() < size) {
+    private static void addRandomImmigrants(List<Individual> nextGeneration) {
+        while (nextGeneration.size() < POPULATION_SIZE) {
             nextGeneration.add(new Individual(new Chromosome()));
         }
-
-        return nextGeneration;
     }
 
     private float evaluateFitness(Individual ind, List<Image> trainSet, List<Image> validationSet) {
@@ -94,14 +98,7 @@ public class GeneticAlgorithm {
             float accuracy = epochTrainer.train(network, trainSet, validationSet);
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);
-
-            int totalParams = network.getLayers().stream()
-                .mapToInt(Layer::getParameterCount)
-                .sum();
-
-            float error = 100f - accuracy * 100f;
-            float complexityPenalty = totalParams / 100_000f;
-            return error + complexityPenalty;
+            return countFitness(network, accuracy);
 
         } catch (IllegalStateException e) {
             System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
@@ -114,5 +111,15 @@ public class GeneticAlgorithm {
         long minutes = floorDiv(totalSeconds, 60);
         long seconds = totalSeconds - minutes * 60;
         System.out.printf("Time for one: %d:%d ", minutes, seconds);
+    }
+
+    private static float countFitness(NeuralNetwork network, float accuracy) {
+        int totalParams = network.getLayers().stream()
+            .mapToInt(Layer::getParameterCount)
+            .sum();
+
+        float error = 100f - accuracy * 100f;
+        float complexityPenalty = totalParams / 100_000f;
+        return error + complexityPenalty;
     }
 }
