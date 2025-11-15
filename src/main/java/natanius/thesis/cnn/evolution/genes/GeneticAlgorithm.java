@@ -13,6 +13,7 @@ import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkF
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.crossover;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -26,8 +27,18 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 public class GeneticAlgorithm {
 
     private final EpochTrainer epochTrainer = new EpochTrainer();
+    private static final HashMap<String, Float> CACHE = new HashMap<>();
 
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
+        for (Individual ind : currentPopulation) {
+            while (ind.getFitness() == Float.MAX_VALUE &&
+                CACHE.containsKey(ind.getChromosome().toString())) {
+                System.out.println("Already checked chromosome {" + ind.getChromosome().toString() + "}, generating a new one");
+                ind.setChromosome(new Chromosome());
+            }
+            CACHE.putIfAbsent(ind.getChromosome().toString(), null);
+        }
+
         evaluateFitnessForAll(currentPopulation, trainSet, validationSet);
 
         currentPopulation.sort(comparingDouble(Individual::getFitness));
@@ -36,6 +47,7 @@ public class GeneticAlgorithm {
         addChildrenOfElite(currentPopulation, nextGeneration);
         addMutants(currentPopulation, nextGeneration);
         addRandomImmigrants(nextGeneration);
+        System.out.println("Cache size: " + CACHE.size());
         return nextGeneration;
     }
 
@@ -46,7 +58,9 @@ public class GeneticAlgorithm {
             .forEach(i -> {
                 Individual ind = currentPopulation.get(i);
                 if (ind.getFitness() == Float.MAX_VALUE) {
-                    ind.setFitness(evaluateFitness(ind, trainSet, validationSet));
+                    float fitness = evaluateFitness(ind, trainSet, validationSet);
+                    ind.setFitness(fitness);
+                    CACHE.put(ind.getChromosome().toString(), fitness);
                 }
                 int processed = processedCount.incrementAndGet();
                 String threadName = currentThread().getName();
@@ -70,8 +84,6 @@ public class GeneticAlgorithm {
                     break;
                 }
             }
-
-            System.out.println("crossover: " + p1.getChromosome() + " + " + p2.getChromosome());
             Chromosome childChromosome = crossover(p1.getChromosome(), p2.getChromosome());
             nextGeneration.add(new Individual(childChromosome));
         }
@@ -102,7 +114,13 @@ public class GeneticAlgorithm {
 
         } catch (IllegalStateException e) {
             System.out.println("Invalid chromosome " + ind.getChromosome() + " → regenerating");
-            ind.setChromosome(new Chromosome());
+            Chromosome chromosome = new Chromosome();
+            while (CACHE.containsKey(chromosome.toString())) {
+                chromosome = new Chromosome();
+                System.out.println("++");
+            }
+            ind.setChromosome(chromosome);
+            CACHE.put(ind.getChromosome().toString(), null);
             return evaluateFitness(ind, trainSet, validationSet);
         }
     }
