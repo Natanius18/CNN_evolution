@@ -15,52 +15,33 @@ public class LayerGene {
     private final Integer poolStride;
     private final Integer convStride;
 
-    public LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, int padding, int convStride) {
+    private LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, 
+                     int padding, Integer fcSize, Integer poolWindow, Integer poolStride, Integer convStride) {
         this.type = type;
         this.numFilters = numFilters;
         this.filterSize = filterSize;
         this.activation = activation;
         this.padding = padding;
-        this.fcSize = null;
-        this.poolWindow = null;
-        this.poolStride = null;
+        this.fcSize = fcSize;
+        this.poolWindow = poolWindow;
+        this.poolStride = poolStride;
         this.convStride = convStride;
     }
 
+    public LayerGene(LayerType type, Integer numFilters, Integer filterSize, Activation activation, int padding, int convStride) {
+        this(type, numFilters, filterSize, activation, padding, null, null, null, convStride);
+    }
+
     public LayerGene(LayerType type, Integer fcSize, Activation activation) {
-        this.type = type;
-        this.numFilters = null;
-        this.filterSize = null;
-        this.activation = activation;
-        this.padding = 0;
-        this.fcSize = fcSize;
-        this.poolWindow = null;
-        this.poolStride = null;
-        this.convStride = null;
+        this(type, null, null, activation, 0, fcSize, null, null, null);
     }
 
     public LayerGene(LayerType type, int poolWindow, int poolStride) {
-        this.type = type;
-        this.numFilters = null;
-        this.filterSize = null;
-        this.activation = null;
-        this.padding = 0;
-        this.fcSize = null;
-        this.poolWindow = poolWindow;
-        this.poolStride = poolStride;
-        this.convStride = null;
+        this(type, null, null, null, 0, null, poolWindow, poolStride, null);
     }
 
     public LayerGene(LayerType type) {
-        this.type = type;
-        this.numFilters = null;
-        this.filterSize = null;
-        this.activation = null;
-        this.padding = 0;
-        this.fcSize = null;
-        this.poolWindow = null;
-        this.poolStride = null;
-        this.convStride = null;
+        this(type, null, null, null, 0, null, null, null, null);
     }
 
     @Override

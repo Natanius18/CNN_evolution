@@ -39,7 +39,9 @@ public class GeneticAlgorithm {
                 }
                 int processed = processedCount.incrementAndGet();
                 String threadName = currentThread().getName();
-                System.out.println("[" + processed + "/" + currentPopulation.size() + "], thread " + threadName.charAt(threadName.length() - 1) + ": " + ind);
+                String[] split = threadName.split("-");
+                System.out.println("[" + processed + "/" + currentPopulation.size() + "], thread " +
+                    (split.length > 1 ? split[split.length - 1] : "0") + ": " + ind);
             });
 
         // 2. Сортировка по фитнесу
@@ -92,11 +94,11 @@ public class GeneticAlgorithm {
             float accuracy = epochTrainer.train(network, trainSet, validationSet);
             long trainingTime = now().getEpochSecond() - start;
             printTimeTaken(trainingTime);
-            
+
             int totalParams = network.getLayers().stream()
                 .mapToInt(Layer::getParameterCount)
                 .sum();
-            
+
             float error = 100f - accuracy * 100f;
             float complexityPenalty = totalParams / 100_000f;
             return error + complexityPenalty;
