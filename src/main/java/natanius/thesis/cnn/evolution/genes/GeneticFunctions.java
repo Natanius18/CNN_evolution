@@ -15,10 +15,12 @@ import static natanius.thesis.cnn.evolution.genes.LayerType.MAX_POOL;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.experimental.UtilityClass;
 import natanius.thesis.cnn.evolution.activation.Linear;
 import natanius.thesis.cnn.evolution.network.NetworkBuilder;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
+@UtilityClass
 public class GeneticFunctions {
 
     // Кроссовер: создаём ребёнка из двух родителей

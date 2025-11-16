@@ -14,12 +14,11 @@ public class NeuralNetwork {
     private final List<Layer> layers;
 
     private static final String RESET = "\u001B[0m";
-    private static final String CYAN = "\u001B[36m";  // Titles
-    private static final String GREEN = "\u001B[32m"; // Convolution
-    private static final String BLUE = "\u001B[34m";  // Max Pooling
-    private static final String MAGENTA = "\u001B[35m"; // Fully Connected
-    private static final String YELLOW = "\u001B[33m"; // Stats
-
+    private static final String CYAN = "\u001B[36m";     // Titles
+    private static final String GREEN = "\u001B[32m";    // Convolution
+    private static final String BLUE = "\u001B[34m";     // Max Pooling
+    private static final String MAGENTA = "\u001B[35m";  // Fully Connected
+    private static final String YELLOW = "\u001B[33m";   // Stats
 
     public NeuralNetwork(List<Layer> layers) {
         this.layers = layers;
@@ -42,6 +41,8 @@ public class NeuralNetwork {
             }
         }
     }
+
+    // ========== SOFTMAX & LOSS ==========
 
     /**
      * Застосовує Softmax до вектора logits для отримання ймовірностей.
@@ -79,7 +80,7 @@ public class NeuralNetwork {
      * @param correctAnswer правильна мітка класу (0-9)
      * @return градієнт loss function
      */
-    public double[] getErrors(double[] networkOutput, int correctAnswer) {
+    private double[] getErrors(double[] networkOutput, int correctAnswer) {
         int numClasses = networkOutput.length;
         double[] expected = new double[numClasses];
         expected[correctAnswer] = 1;  // One-hot encoding
@@ -90,6 +91,16 @@ public class NeuralNetwork {
         }
         return errors;
     }
+
+    /**
+     * Обчислює Cross-Entropy Loss для одного прикладу
+     */
+    private double computeCrossEntropyLoss(double[] output, int correctLabel) {
+        double eps = 1e-7;
+        return -Math.log(Math.max(output[correctLabel], eps));
+    }
+
+    // ========== PREDICTION ==========
 
     private int getMaxIndex(double[] in) {
         double max = 0;
@@ -105,87 +116,171 @@ public class NeuralNetwork {
         return index;
     }
 
+    /**
+     * Передбачення для одного зображення (одиночне)
+     * Використовує batch size = 1 для inference
+     */
     public int guess(Image image) {
-        List<double[][]> inList = new ArrayList<>();
-        inList.add(image.data());
-        double[] out = layers.getFirst().getOutput(inList);
-        double[] softmaxOut = applySoftmax(out);
+        List<List<double[][]>> batchInputs = new ArrayList<>();
+        List<double[][]> imgList = new ArrayList<>();
+        imgList.add(image.data());
+        batchInputs.add(imgList);
+
+        // Forward через весь батч (розмір 1)
+        List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
+
+        double[] output = batchOutputs.get(0);
+        double[] softmaxOut = applySoftmax(output);
         return getMaxIndex(softmaxOut);
     }
 
-    public float test(List<Image> images) {
-        int correct = 0;
+    /**
+     * Передбачення для батчу зображень
+     */
+    public List<Integer> guessBatch(List<Image> images) {
+        List<Integer> predictions = new ArrayList<>();
 
-        int size = images.size();
+        List<List<double[][]>> batchInputs = new ArrayList<>();
         for (Image img : images) {
-//            printProgress(i, size, "Testing         ");
-            int guess = guess(img);
-
-            if (guess == img.label()) {
-                correct++;
-            }
-        }
-//        if (DEBUG) {
-//            System.out.println();
-//        }
-        return ((float) correct / size);
-    }
-
-
-    public void train(List<Image> images) {
-        for (Image img : images) {
-//            printProgress(i, size, "Training        ");
-
-            List<double[][]> inList = new ArrayList<>();
-            inList.add(img.data());
-
-            // Forward pass
-            double[] out = layers.getFirst().getOutput(inList);
-
-            // Застосовуємо Softmax для отримання ймовірностей
-            double[] softmaxOut = applySoftmax(out);
-
-            // Обчислюємо градієнт Cross-Entropy Loss
-            double[] dldO = getErrors(softmaxOut, img.label());
-
-            // Backpropagation
-            layers.getLast().backPropagation(dldO);
+            List<double[][]> imgList = new ArrayList<>();
+            imgList.add(img.data());
+            batchInputs.add(imgList);
         }
 
-//        if (DEBUG) {
-//            System.out.println();
-//        }
+        List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
+
+        for (double[] output : batchOutputs) {
+            double[] softmaxOut = applySoftmax(output);
+            predictions.add(getMaxIndex(softmaxOut));
+        }
+
+        return predictions;
     }
 
-//    private static void printProgress(int i, int totalImages, String processName) {
-//        if (DEBUG) {
-//            double progress = (i + 1) * 100. / totalImages;
-//            String progressBar = "[" + "■".repeat((int) (progress / 2)) + " ".repeat((int) (50 - progress / 2)) + "]";
-//
-//            String progressBarColor;
-//            if (progress < 50) {
-//                progressBarColor = RED;
-//            } else {
-//                progressBarColor = progress < 80 ? YELLOW : GREEN;
-//            }
-//
-//            String formattedProgress = String.format("%.2f", progress);
-//            System.out.print("\r" + processName + " progress: \u001B[1m" + progressBarColor + progressBar + RESET + "\u001B[1m " + formattedProgress + "%" + RESET);
-//        }
-//    }
-
+    /**
+     * Real-time prediction для одного вектора (784 елементів для MNIST)
+     */
     public double[] guessInRealTime(double[] inputs) {
         double[][] inputMatrix = new double[28][28];
 
         for (int i = 0; i < 28; i++) {
             System.arraycopy(inputs, i * 28, inputMatrix[i], 0, 28);
         }
-        List<double[][]> inList = new ArrayList<>();
-        inList.add(inputMatrix);
 
-        double[] out = layers.getFirst().getOutput(inList);
-        return applySoftmax(out);  // Повертаємо ймовірності
+        List<List<double[][]>> batchInputs = new ArrayList<>();
+        List<double[][]> imgList = new ArrayList<>();
+        imgList.add(inputMatrix);
+        batchInputs.add(imgList);
+
+        List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
+
+        double[] output = batchOutputs.get(0);
+        return applySoftmax(output);  // Повертаємо ймовірності
     }
+
+
+
+    // ========== TESTING ==========
+
+    public float test(List<Image> images) {
+        int correct = 0;
+        int size = images.size();
+
+        for (Image img : images) {
+            int guess = guess(img);
+            if (guess == img.label()) {
+                correct++;
+            }
+        }
+
+        return ((float) correct / size);
+    }
+
+    /**
+     * Тестирование на батчах (более эффективно для больших наборов)
+     */
+    public float testBatch(List<Image> images, int batchSize) {
+        int correct = 0;
+        int numBatches = (images.size() + batchSize - 1) / batchSize;
+
+        for (int b = 0; b < numBatches; b++) {
+            int start = b * batchSize;
+            int end = Math.min(start + batchSize, images.size());
+            List<Image> batch = images.subList(start, end);
+
+            List<Integer> predictions = guessBatch(batch);
+
+            for (int i = 0; i < predictions.size(); i++) {
+                if (predictions.get(i) == batch.get(i).label()) {
+                    correct++;
+                }
+            }
+        }
+
+        return ((float) correct / images.size());
+    }
+
+    // ========== TRAINING WITH MINI-BATCH ==========
+
+    /**
+     * Обучение на одной эпохе с mini-batch разбиением
+     *
+     * @param images        тренировочный набор
+     * @param batchSize     размер батча
+     * @return средняя loss за эпоху
+     */
+    public double trainEpoch(List<Image> images, int batchSize) {
+        int numBatches = (images.size() + batchSize - 1) / batchSize;
+        double totalLoss = 0.0;
+
+        for (int b = 0; b < numBatches; b++) {
+            int start = b * batchSize;
+            int end = Math.min(start + batchSize, images.size());
+            List<Image> batch = images.subList(start, end);
+
+            // === FORWARD PASS ===
+            List<List<double[][]>> batchInputs = new ArrayList<>();
+            List<Integer> labels = new ArrayList<>();
+
+            for (Image img : batch) {
+                List<double[][]> imgList = new ArrayList<>();
+                imgList.add(img.data());
+                batchInputs.add(imgList);
+                labels.add(img.label());
+            }
+
+            // Forward через всю сеть
+            List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
+
+            // === COMPUTE LOSS & GRADIENTS ===
+            List<double[]> batchErrors = new ArrayList<>();
+            double batchLoss = 0.0;
+
+            for (int i = 0; i < batch.size(); i++) {
+                double[] output = batchOutputs.get(i);
+                double[] softmaxOut = applySoftmax(output);
+
+                // Вычисляем loss для этого примера
+                double loss = computeCrossEntropyLoss(softmaxOut, labels.get(i));
+                batchLoss += loss;
+
+                // Вычисляем градиент (Softmax + CrossEntropy)
+                double[] errors = getErrors(softmaxOut, labels.get(i));
+                batchErrors.add(errors);
+            }
+
+            totalLoss += batchLoss;
+
+            // === BACKPROPAGATION ===
+            layers.getLast().backPropagationBatch(batchErrors);
+        }
+
+        // Усредняем loss по всей эпохе
+        return totalLoss / images.size();
+    }
+
+
+    // ========== NETWORK INFO ==========
 
     @Override
     public String toString() {

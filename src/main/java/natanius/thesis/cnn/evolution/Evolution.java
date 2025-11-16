@@ -2,7 +2,9 @@ package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
+import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
+import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
@@ -25,9 +27,9 @@ import natanius.thesis.cnn.evolution.visualization.FormDigits;
 
 public class Evolution {
 
-    private static final int MODE = 2;
+    private static final int MODE = 1;
     private static final GeneticAlgorithm GA = new GeneticAlgorithm();
-    private static final EpochTrainer EPOCH_TRAINER = new EpochTrainer();
+    private static final EpochTrainer EPOCH_TRAINER = new EpochTrainer(BATCH_SIZE, EPOCHS);
 
     public static void main(String[] args) {
 
@@ -59,7 +61,7 @@ public class Evolution {
 
         for (int epoch = 1; epoch <= 10; epoch++) {
             long start = now().getEpochSecond();
-            network.train(imagesTrain);
+            network.trainEpoch(imagesTrain, BATCH_SIZE);
             float testAccuracy = network.test(imagesTest);
             float trainAccuracy = network.test(imagesTrain);
             System.out.printf("Epoch %d: Train Accuracy = %.2f, Test Accuracy = %.2f%%%n", epoch, trainAccuracy, testAccuracy);
