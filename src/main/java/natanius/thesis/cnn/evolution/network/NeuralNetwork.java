@@ -129,7 +129,7 @@ public class NeuralNetwork {
         // Forward через весь батч (розмір 1)
         List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
 
-        double[] output = batchOutputs.get(0);
+        double[] output = batchOutputs.getFirst();
         double[] softmaxOut = applySoftmax(output);
         return getMaxIndex(softmaxOut);
     }
@@ -174,7 +174,7 @@ public class NeuralNetwork {
 
         List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
 
-        double[] output = batchOutputs.get(0);
+        double[] output = batchOutputs.getFirst();
         return applySoftmax(output);  // Повертаємо ймовірності
     }
 

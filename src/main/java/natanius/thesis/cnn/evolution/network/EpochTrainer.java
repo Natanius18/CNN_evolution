@@ -1,6 +1,8 @@
 package natanius.thesis.cnn.evolution.network;
 
 import static java.util.Collections.shuffle;
+import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
+import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
 import java.util.List;
@@ -9,18 +11,6 @@ import natanius.thesis.cnn.evolution.data.Image;
 
 @Getter
 public class EpochTrainer {
-
-    private final int batchSize;
-    private final int numEpochs;
-
-    /**
-     * @param batchSize размер мини-батча для обучения
-     * @param numEpochs кількість епох
-     */
-    public EpochTrainer(int batchSize, int numEpochs) {
-        this.batchSize = batchSize;
-        this.numEpochs = numEpochs;
-    }
 
     /**
      * Обучение нейросети на протяжении numEpochs эпох с mini-batch
@@ -33,18 +23,12 @@ public class EpochTrainer {
     public float train(NeuralNetwork neuralNetwork, List<Image> trainSet, List<Image> validationSet) {
         float accuracy = 0;
 
-        for (int epoch = 1; epoch <= numEpochs; epoch++) {
-            // Перемешиваем тренировочный набор перед каждой эпохой
+        for (int epoch = 1; epoch <= EPOCHS; epoch++) {
             shuffle(trainSet, RANDOM);
 
-            // Обучение на эпохе с mini-batch
-            double epochLoss = neuralNetwork.trainEpoch(trainSet, batchSize);
+            neuralNetwork.trainEpoch(trainSet, BATCH_SIZE);
 
-            // Тестирование на validation set
-            accuracy = neuralNetwork.testBatch(validationSet, batchSize);
-
-            System.out.printf("Epoch %d/%d | Loss: %.6f | Validation Accuracy: %.4f%n",
-                epoch, numEpochs, epochLoss, accuracy);
+            accuracy = neuralNetwork.testBatch(validationSet, BATCH_SIZE);
         }
 
         return accuracy;

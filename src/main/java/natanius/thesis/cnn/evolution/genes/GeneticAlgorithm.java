@@ -4,10 +4,8 @@ import static java.lang.Math.floorDiv;
 import static java.lang.Thread.currentThread;
 import static java.time.Instant.now;
 import static java.util.Comparator.comparingDouble;
-import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.CROSSOVER_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.ELITE_COUNT;
-import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.MUTANT_COUNT;
 import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
@@ -28,18 +26,11 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 @RequiredArgsConstructor
 public class GeneticAlgorithm {
 
-    private final EpochTrainer epochTrainer = new EpochTrainer(BATCH_SIZE, EPOCHS);
+    private final EpochTrainer epochTrainer = new EpochTrainer();
     private static final HashMap<String, Float> CACHE = new HashMap<>();
 
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
-        for (Individual ind : currentPopulation) {
-            while (ind.getFitness() == Float.MAX_VALUE &&
-                CACHE.containsKey(ind.getChromosome().toString())) {
-                System.out.println("Already checked chromosome {" + ind.getChromosome().toString() + "}, generating a new one");
-                ind.setChromosome(new Chromosome());
-            }
-            CACHE.putIfAbsent(ind.getChromosome().toString(), null);
-        }
+        checkCache(currentPopulation);
 
         evaluateFitnessForAll(currentPopulation, trainSet, validationSet);
 
@@ -53,10 +44,20 @@ public class GeneticAlgorithm {
         return nextGeneration;
     }
 
+    private static void checkCache(List<Individual> currentPopulation) {
+        for (Individual ind : currentPopulation) {
+            while (ind.getFitness() == Float.MAX_VALUE && CACHE.containsKey(ind.getChromosome().toString())) {
+                System.out.println("Already checked chromosome {" + ind.getChromosome().toString() + "}, generating a new one");
+                ind.setChromosome(new Chromosome());
+            }
+            CACHE.putIfAbsent(ind.getChromosome().toString(), null);
+        }
+    }
+
     private void evaluateFitnessForAll(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
         AtomicInteger processedCount = new AtomicInteger(0);
         IntStream.range(0, currentPopulation.size())
-//            .parallel()
+            .parallel()
             .forEach(i -> {
                 Individual ind = currentPopulation.get(i);
                 if (ind.getFitness() == Float.MAX_VALUE) {
@@ -119,7 +120,6 @@ public class GeneticAlgorithm {
             Chromosome chromosome = new Chromosome();
             while (CACHE.containsKey(chromosome.toString())) {
                 chromosome = new Chromosome();
-                System.out.println("++");
             }
             ind.setChromosome(chromosome);
             CACHE.put(ind.getChromosome().toString(), null);

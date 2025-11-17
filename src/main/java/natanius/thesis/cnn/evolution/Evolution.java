@@ -4,8 +4,8 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
-import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
+import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
@@ -27,12 +27,12 @@ import natanius.thesis.cnn.evolution.visualization.FormDigits;
 
 public class Evolution {
 
-    private static final int MODE = 1;
+    private static final int MODE = 2;
     private static final GeneticAlgorithm GA = new GeneticAlgorithm();
-    private static final EpochTrainer EPOCH_TRAINER = new EpochTrainer(BATCH_SIZE, EPOCHS);
+    private static final EpochTrainer EPOCH_TRAINER = new EpochTrainer();
 
     public static void main(String[] args) {
-
+        parseArguments(args);
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
         imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
@@ -46,12 +46,35 @@ public class Evolution {
         }
     }
 
+    private static void parseArguments(String[] args) {
+        if (args.length > 0) {
+            try {
+                DATASET_FRACTION = Float.parseFloat(args[0]);
+                if (DATASET_FRACTION <= 0 || DATASET_FRACTION > 1.0) {
+                    System.err.println("DATASET_FRACTION must be between 0 and 1");
+                    System.exit(1);
+                }
+            } catch (NumberFormatException e) {
+                System.err.println("Invalid DATASET_FRACTION: " + args[0]);
+                System.exit(1);
+            }
+            if (args.length == 2) {
+                try {
+                    POPULATION_SIZE = Integer.parseInt(args[1]);
+                } catch (NumberFormatException e) {
+                    System.err.println("Invalid POPULATION_SIZE: " + args[2]);
+                    System.exit(1);
+                }
+            }
+        }
+    }
+
     private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
 
         NeuralNetwork network = new NetworkBuilder()
-            .addConvolutionLayer(8, 3, 1, 0.001, new LeakyReLU(), 0)
+            .addConvolutionLayer(8, 3, 1, 0.01, new LeakyReLU(), 0)
             .addMaxPoolLayer(2, 1)
-            .addFullyConnectedLayer(0.001, new Linear())
+            .addFullyConnectedLayer(0.01, new Linear())
             .build();
 
 //        EpochTrainer epochTrainer = new EpochTrainer();
