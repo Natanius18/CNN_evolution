@@ -13,25 +13,21 @@ public class MaxPoolLayer extends Layer {
     private final int inRows;
     private final int inCols;
 
-    // Batch storage для backpropagation
-    // lastMaxRowBatch[b][r][c] = строка максимума для примера b, позиции (r,c)
-    // lastMaxColBatch[b][r][c] = колонка максимума для примера b, позиции (r,c)
     private List<List<int[][]>> lastMaxRowBatch;
     private List<List<int[][]>> lastMaxColBatch;
 
-    // ========== BATCH FORWARD PASS ==========
 
     @Override
     public List<double[]> getOutputBatch(List<List<double[][]>> batchInput) {
         List<List<double[][]>> pooledOutput = maxPoolForwardPassBatch(batchInput);
 
-        // Конвертируем в векторы для следующего слоя
+        // Конвертуємо в вектори для наступного шару
         List<double[]> batchVectors = new ArrayList<>();
         for (List<double[][]> featureMaps : pooledOutput) {
             batchVectors.add(matrixToVector(featureMaps));
         }
 
-        // Передаём следующему слою, если есть
+        // Передаємо наступному шару, якщо є
         if (nextLayer != null) {
             return nextLayer.getOutputBatch(pooledOutput);
         }
@@ -39,8 +35,15 @@ public class MaxPoolLayer extends Layer {
     }
 
     /**
-     * Forward pass для батча изображений
-     * Каждое изображение содержит список каналов (feature maps)
+     * Виконує forward pass max pooling для батча вхідних feature maps.
+     * <p>
+     * Max pooling зменшує просторові розміри, зберігаючи найважливіші ознаки.
+     * Для кожного вікна розміром windowSize×windowSize обирається максимальне значення.
+     * <p>
+     * <b>Важливо:</b> Зберігаються позиції максимумів для backpropagation.
+     *
+     * @param batchInputs список вхідних feature maps [batchSize][inLength][inRows][inCols]
+     * @return список вихідних feature maps [batchSize][inLength][outRows][outCols]
      */
     public List<List<double[][]>> maxPoolForwardPassBatch(List<List<double[][]>> batchInputs) {
         List<List<double[][]>> batchOutputs = new ArrayList<>();
@@ -52,13 +55,13 @@ public class MaxPoolLayer extends Layer {
             List<int[][]> channelMaxRows = new ArrayList<>();
             List<int[][]> channelMaxCols = new ArrayList<>();
 
-            // Pooling для каждого канала
+            // Pooling для кожного каналу
             for (double[][] channel : input) {
                 double[][] pooledChannel = new double[getOutputRows()][getOutputCols()];
                 int[][] maxRows = new int[getOutputRows()][getOutputCols()];
                 int[][] maxCols = new int[getOutputRows()][getOutputCols()];
 
-                // Процесс pooling
+                // Процес pooling
                 for (int r = 0; r < getOutputRows(); r++) {
                     for (int c = 0; c < getOutputCols(); c++) {
                         double max = Double.NEGATIVE_INFINITY;
@@ -68,7 +71,7 @@ public class MaxPoolLayer extends Layer {
                         int startRow = r * stepSize;
                         int startCol = c * stepSize;
 
-                        // Ищем максимум в окне
+                        // Шукаємо максимум у вікні
                         for (int x = 0; x < windowSize; x++) {
                             for (int y = 0; y < windowSize; y++) {
                                 double value = channel[startRow + x][startCol + y];
@@ -99,11 +102,10 @@ public class MaxPoolLayer extends Layer {
         return batchOutputs;
     }
 
-    // ========== BATCH BACKPROPAGATION ==========
 
     @Override
     public void backPropagationBatch(List<double[]> dLdOBatch) {
-        // Конвертируем векторы обратно в feature maps
+        // Конвертуємо вектори назад у feature maps
         List<List<double[][]>> dLdOFeatureMapsBatch = new ArrayList<>();
         for (double[] vec : dLdOBatch) {
             dLdOFeatureMapsBatch.add(vectorToMatrix(vec, getOutputLength(), getOutputRows(), getOutputCols()));
@@ -113,27 +115,38 @@ public class MaxPoolLayer extends Layer {
     }
 
     /**
-     * Backpropagation для батча градиентов
-     * Для каждого примера пропускаем ошибку через позиции максимумов
+     * Виконує backpropagation через max pooling шар для батча градієнтів.
+     * <p>
+     * Max pooling не має параметрів для навчання, тому градієнт просто
+     * передається назад тільки в ті позиції, де були максимальні значення
+     * під час forward pass. Всі інші позиції отримують градієнт 0.
+     * <p>
+     * <b>Математична операція:</b>
+     * <pre>
+     * ∂L/∂x[i][j] = ∂L/∂y[r][c], якщо x[i][j] був максимумом у вікні (r,c)
+     * ∂L/∂x[i][j] = 0, інакше
+     * </pre>
+     *
+     * @param dLdOBatch список градієнтів виходу [batchSize][inLength][outRows][outCols]
      */
     private void backPropagationBatchInternal(List<List<double[][]>> dLdOBatch) {
         int batchSize = dLdOBatch.size();
         List<List<double[][]>> dLdOPrevBatch = new ArrayList<>();
 
         for (int b = 0; b < batchSize; b++) {
-            List<double[][]> dLdO = dLdOBatch.get(b);  // список градиентов по каналам
+            List<double[][]> dLdO = dLdOBatch.get(b);  // список градієнтів по каналах
             List<int[][]> maxRows = lastMaxRowBatch.get(b);
             List<int[][]> maxCols = lastMaxColBatch.get(b);
 
             List<double[][]> dLdXChannels = new ArrayList<>();
 
-            // Обрабатываем каждый канал
+            // Обробляємо кожен канал
             for (int c = 0; c < inLength; c++) {
-                double[][] gradOutput = dLdO.get(c);  // градиент для этого канала
+                double[][] gradOutput = dLdO.get(c);  // градієнт для цього каналу
                 int[][] maxRowIdx = maxRows.get(c);
                 int[][] maxColIdx = maxCols.get(c);
 
-                // Восстанавливаем градиент до pooling
+                // Відновлюємо градієнт до pooling
                 double[][] gradInput = new double[inRows][inCols];
 
                 for (int r = 0; r < getOutputRows(); r++) {
@@ -141,7 +154,7 @@ public class MaxPoolLayer extends Layer {
                         int maxI = maxRowIdx[r][col];
                         int maxJ = maxColIdx[r][col];
 
-                        // Ошибка пропускается только в позицию максимума
+                        // Помилка передається тільки в позицію максимуму
                         if (maxI != -1 && maxJ != -1) {
                             gradInput[maxI][maxJ] += gradOutput[r][col];
                         }
@@ -154,7 +167,7 @@ public class MaxPoolLayer extends Layer {
             dLdOPrevBatch.add(dLdXChannels);
         }
 
-        // Передаём батч градиентов предыдущему слою
+        // Передаємо батч градієнтів попередньому шару
         if (previousLayer != null) {
             List<double[]> dLdOPrevVectors = new ArrayList<>();
             for (List<double[][]> featureMaps : dLdOPrevBatch) {
@@ -164,11 +177,10 @@ public class MaxPoolLayer extends Layer {
         }
     }
 
-    // ========== METADATA ==========
 
     @Override
     public int getOutputLength() {
-        return inLength;  // Количество каналов не меняется
+        return inLength;  // Кількість каналів не змінюється
     }
 
     @Override
@@ -188,7 +200,7 @@ public class MaxPoolLayer extends Layer {
 
     @Override
     public int getParameterCount() {
-        return 0;  // Нет обучаемых параметров в pooling
+        return 0;  // Немає параметрів для навчання в pooling
     }
 
     @Override
