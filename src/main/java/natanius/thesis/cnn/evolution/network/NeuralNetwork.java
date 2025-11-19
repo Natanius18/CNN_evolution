@@ -42,8 +42,6 @@ public class NeuralNetwork {
         }
     }
 
-    // ========== SOFTMAX & LOSS ==========
-
     /**
      * Застосовує Softmax до вектора logits для отримання ймовірностей.
      *
@@ -92,15 +90,12 @@ public class NeuralNetwork {
         return errors;
     }
 
-    /**
-     * Обчислює Cross-Entropy Loss для одного прикладу
-     */
+
     private double computeCrossEntropyLoss(double[] output, int correctLabel) {
         double eps = 1e-7;
         return -Math.log(Math.max(output[correctLabel], eps));
     }
 
-    // ========== PREDICTION ==========
 
     private int getMaxIndex(double[] in) {
         double max = 0;
@@ -180,8 +175,6 @@ public class NeuralNetwork {
 
 
 
-    // ========== TESTING ==========
-
     public float test(List<Image> images) {
         int correct = 0;
         int size = images.size();
@@ -197,7 +190,7 @@ public class NeuralNetwork {
     }
 
     /**
-     * Тестирование на батчах (более эффективно для больших наборов)
+     * Тестування на батчах (більш ефективно для великих наборів)
      */
     public float testBatch(List<Image> images, int batchSize) {
         int correct = 0;
@@ -220,14 +213,12 @@ public class NeuralNetwork {
         return ((float) correct / images.size());
     }
 
-    // ========== TRAINING WITH MINI-BATCH ==========
-
     /**
-     * Обучение на одной эпохе с mini-batch разбиением
+     * Навчання на одній епосі з mini-batch розбиттям
      *
-     * @param images        тренировочный набор
-     * @param batchSize     размер батча
-     * @return средняя loss за эпоху
+     * @param images        тренувальний набір
+     * @param batchSize     розмір батча
+     * @return середня loss за епоху
      */
     public double trainEpoch(List<Image> images, int batchSize) {
         int numBatches = (images.size() + batchSize - 1) / batchSize;
@@ -249,7 +240,7 @@ public class NeuralNetwork {
                 labels.add(img.label());
             }
 
-            // Forward через всю сеть
+            // Forward через всю мережу
             List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
 
             // === COMPUTE LOSS & GRADIENTS ===
@@ -260,11 +251,11 @@ public class NeuralNetwork {
                 double[] output = batchOutputs.get(i);
                 double[] softmaxOut = applySoftmax(output);
 
-                // Вычисляем loss для этого примера
+                // Обчислюємо loss для цього прикладу
                 double loss = computeCrossEntropyLoss(softmaxOut, labels.get(i));
                 batchLoss += loss;
 
-                // Вычисляем градиент (Softmax + CrossEntropy)
+                // Обчислюємо градієнт (Softmax + CrossEntropy)
                 double[] errors = getErrors(softmaxOut, labels.get(i));
                 batchErrors.add(errors);
             }

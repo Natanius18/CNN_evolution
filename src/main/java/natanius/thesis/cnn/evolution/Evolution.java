@@ -2,10 +2,12 @@ package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
+import static java.util.Collections.shuffle;
 import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.GENERATIONS;
 import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
+import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
@@ -81,6 +83,7 @@ public class Evolution {
 
         for (int epoch = 1; epoch <= 10; epoch++) {
             long start = now().getEpochSecond();
+            shuffle(imagesTrain, RANDOM);
             network.trainEpoch(imagesTrain, BATCH_SIZE);
             float testAccuracy = network.test(imagesTest);
             float trainAccuracy = network.test(imagesTrain);

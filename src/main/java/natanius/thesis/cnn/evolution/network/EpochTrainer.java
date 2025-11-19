@@ -13,12 +13,12 @@ import natanius.thesis.cnn.evolution.data.Image;
 public class EpochTrainer {
 
     /**
-     * Обучение нейросети на протяжении numEpochs эпох с mini-batch
+     * Навчання нейромережі протягом numEpochs епох з mini-batch
      *
-     * @param neuralNetwork нейросеть для обучения
-     * @param trainSet      тренировочный набор данных
-     * @param validationSet набор для валидации
-     * @return точность на последней эпохе
+     * @param neuralNetwork нейромережа для навчання
+     * @param trainSet      тренувальний набір даних
+     * @param validationSet набір для валідації
+     * @return точність на останній епосі
      */
     public float train(NeuralNetwork neuralNetwork, List<Image> trainSet, List<Image> validationSet) {
         float accuracy = 0;
