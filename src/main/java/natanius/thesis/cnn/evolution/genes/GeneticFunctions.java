@@ -23,12 +23,12 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 @UtilityClass
 public class GeneticFunctions {
 
-    // Кроссовер: создаём ребёнка из двух родителей
+    // Кросовер: створюємо нащадка з двох батьків
     public static Chromosome crossover(Chromosome parent1, Chromosome parent2) {
         List<LayerGene> p1Layers = parent1.getLayerGenes();
         List<LayerGene> p2Layers = parent2.getLayerGenes();
 
-        // Убираем FC слой для кроссовера
+        // Прибираємо FC шар для кросовера
         List<LayerGene> p1WithoutFC = p1Layers.subList(0, p1Layers.size() - 1);
         List<LayerGene> p2WithoutFC = p2Layers.subList(0, p2Layers.size() - 1);
 
@@ -44,16 +44,16 @@ public class GeneticFunctions {
         return new Chromosome(childLayers);
     }
 
-    // Мутация: случайная перестановка или замена значений
+    // Мутація: випадкова перестановка або заміна значень
     public static Chromosome mutate(Chromosome individual) {
         List<LayerGene> layers = new ArrayList<>(individual.getLayerGenes());
-        // Убираем FC слой для мутации
+        // Прибираємо FC шар для мутації
         layers.removeLast();
         
         double mutationType = RANDOM.nextDouble();
 
         if (mutationType < 0.3) {
-            // Изменить параметры случайного Conv слоя
+            // Змінити параметри випадкового Conv шару
             List<Integer> convIndices = new ArrayList<>();
             for (int i = 0; i < layers.size(); i++) {
                 if (layers.get(i).getType() == CONVOLUTION) {
@@ -78,7 +78,7 @@ public class GeneticFunctions {
                 ));
             }
         } else if (mutationType < 0.5) {
-            // Добавить Conv слой
+            // Додати Conv шар
             int pos = RANDOM.nextInt(layers.size() + 1);
             int prevFilters = pos > 0 ? getPreviousConvFilters(layers, pos) : ALLOWED_FILTERS[0];
             int minFilterIndex = getMinFilterIndex(prevFilters);
@@ -95,9 +95,9 @@ public class GeneticFunctions {
                 convStride
             ));
         } else if (mutationType < 0.7) {
-            // Добавить/удалить MaxPool слой
+            // Додати/видалити MaxPool шар
             if (RANDOM.nextBoolean() && layers.size() > 1) {
-                // Удалить случайный MaxPool
+                // Видалити випадковий MaxPool
                 List<Integer> poolIndices = new ArrayList<>();
                 for (int i = 0; i < layers.size(); i++) {
                     if (layers.get(i).getType() == MAX_POOL) {
@@ -108,7 +108,7 @@ public class GeneticFunctions {
                     layers.remove((int) poolIndices.get(RANDOM.nextInt(poolIndices.size())));
                 }
             } else {
-                // Добавить MaxPool после случайного Conv
+                // Додати MaxPool після випадкового Conv
                 List<Integer> convIndices = new ArrayList<>();
                 for (int i = 0; i < layers.size(); i++) {
                     if (layers.get(i).getType() == CONVOLUTION) {
@@ -123,21 +123,14 @@ public class GeneticFunctions {
                 }
             }
         } else if (layers.size() > 2) {
-            // Удалить случайный слой (но не последний Conv)
+            // Видалити випадковий шар (але не останній Conv)
             int idx = RANDOM.nextInt(layers.size() - 1);
             layers.remove(idx);
         }
         
         layers.add(new LayerGene(FULLY_CONNECTED));
-        Chromosome mutated = new Chromosome(layers);
 
-//        if (DEBUG) {
-//            System.out.println("\n--- Mutation ---");
-//            System.out.println("Before: " + individual);
-//            System.out.println("After:  " + mutated);
-//        }
-
-        return mutated;
+        return new Chromosome(layers);
     }
 
     public static NeuralNetwork buildNetworkFromChromosome(Chromosome chromosome) {

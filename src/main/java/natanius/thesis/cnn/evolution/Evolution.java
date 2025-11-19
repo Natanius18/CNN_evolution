@@ -77,9 +77,6 @@ public class Evolution {
             .addFullyConnectedLayer(0.01, new Linear())
             .build();
 
-//        EpochTrainer epochTrainer = new EpochTrainer();
-//        epochTrainer.train(network, imagesTrain, imagesTest);
-
         System.out.println(network);
 
         for (int epoch = 1; epoch <= 10; epoch++) {
@@ -103,22 +100,16 @@ public class Evolution {
         for (int gen = 0; gen < GENERATIONS; gen++) {
             long start = now().getEpochSecond();
             System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
-//            if (DEBUG) {
-//                System.out.println(Arrays.toString(population.stream().map(Individual::getChromosome).toArray()));
-//            }
-
 
             population = GA.evolve(population, trainSet, validationSet);
 
-            // Найдём лучшую архитектуру
+            // Знайдемо найкращу архітектуру
             Individual best = population.stream()
                 .min(Comparator.comparing(Individual::getFitness))
                 .orElseThrow();
 
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             trainAndSaveResults(imagesTest, best, trainSet, validationSet, start, gen);
-
-            //     new Thread(new FormDigits(neuralNetwork)).start();
         }
     }
 
@@ -128,12 +119,6 @@ public class Evolution {
         float trainAccuracy = neuralNetwork.test(trainSet);
         float validationAccuracy = neuralNetwork.test(validationSet);
         float testAccuracy = neuralNetwork.test(imagesTest);
-
-
-//            if (DEBUG) {
-//                System.out.println(neuralNetwork);
-//            }
-
         long trainingTime = now().getEpochSecond() - start;
         printTimeTaken(trainingTime);
 
