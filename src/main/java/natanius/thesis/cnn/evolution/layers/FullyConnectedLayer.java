@@ -21,8 +21,6 @@ public class FullyConnectedLayer extends Layer {
     private final int outLength;
     private final double learningRate;
     private double l2Lambda = L2_REGULARIZATION_LAMBDA;
-
-    // Batch storage для backpropagation
     private List<double[]> lastXBatch;
     private List<double[]> lastZBatch;
 
@@ -51,11 +49,10 @@ public class FullyConnectedLayer extends Layer {
         biases = new double[outLength];
     }
 
-    // ========== BATCH FORWARD PASS ==========
 
     @Override
     public List<double[]> getOutputBatch(List<List<double[][]>> batchInput) {
-        // Конвертируем входы из feature maps в векторы
+        // Конвертуємо входи з feature maps у вектори
         List<double[]> batchVectors = new ArrayList<>();
         for (List<double[][]> input : batchInput) {
             batchVectors.add(matrixToVector(input));
@@ -64,13 +61,8 @@ public class FullyConnectedLayer extends Layer {
         // Forward pass для батча
         List<double[]> output = fullyConnectedForwardPassBatch(batchVectors);
 
-        // Передаём следующему слою, если есть
+        // Передаємо наступному шару, якщо є
         if (nextLayer != null) {
-            // ❌ НЕПРАВИЛЬНО: nextLayer.getOutputBatch(null);
-            // ✅ ПРАВИЛЬНО: передаём результат как батч List<List<double[][]>>
-
-            // FC обычно последний слой перед выходом, но если есть ещё слои,
-            // нужно конвертировать output обратно в List<List<double[][]>>
             List<List<double[][]>> outputAsFeatureMaps = new ArrayList<>();
             for (double[] vec : output) {
                 List<double[][]> featureMap = vectorToMatrix(vec, 1, 1, vec.length);
@@ -82,8 +74,40 @@ public class FullyConnectedLayer extends Layer {
     }
 
     /**
-     * Forward pass для батча векторов
-     * Каждый вектор в списке — это один пример из батча
+     * Реалізує прямий прохід (forward propagation) через повнозв'язний шар.
+     *
+     * <p><b>Математичні позначення:</b>
+     * <ul>
+     *   <li>input = a^(l-1) — активації попереднього шару (вхід поточного шару)</li>
+     *   <li>weights = W^(l) — матриця ваг поточного шару</li>
+     *   <li>biases = b^(l) — вектор зміщень поточного шару</li>
+     *   <li>z = z^(l) — зважена сума (перед активацією)</li>
+     *   <li>a = a^(l) — активації після застосування функції активації</li>
+     * </ul>
+     *
+     * <p><b>Крок 1:</b> Обчислення зваженої суми:
+     * <pre>
+     *   z^(l) = W^(l) · a^(l-1) + b^(l)
+     * </pre>
+     * де · означає матричне множення (у коді: weights[i][j] * input[i]).
+     *
+     * <p><b>Крок 2:</b> Застосування функції активації:
+     * <pre>
+     *   a^(l) = f^(l)(z^(l))
+     * </pre>
+     * де f^(l) — функція активації шару (ReLU, Sigmoid тощо).
+     *
+     * <p><b>Оптимізація:</b> Під час обчислення z пропускаються нульові елементи input[i],
+     * що особливо ефективно після ReLU активації або pooling операцій.
+     *
+     * <p><b>Збереження для backpropagation:</b>
+     * <ul>
+     *   <li>lastX = a^(l-1) — вхідні активації</li>
+     *   <li>lastZ = z^(l) — зважена сума перед активацією</li>
+     * </ul>
+     *
+     * @param batchInputs список векторів a^(l-1) — активації попереднього шару для кожного прикладу в батчі
+     * @return список векторів a^(l) — активації поточного шару після застосування f^(l)
      */
     public List<double[]> fullyConnectedForwardPassBatch(List<double[]> batchInputs) {
         List<double[]> batchOutputs = new ArrayList<>();
@@ -91,14 +115,8 @@ public class FullyConnectedLayer extends Layer {
         lastZBatch = new ArrayList<>();
 
         for (double[] input : batchInputs) {
-            // Валидация входа
-            if (input.length != inLength) {
-                throw new IllegalArgumentException(
-                    "Expected input length " + inLength + ", got " + input.length
-                );
-            }
+            validateInput(input);
 
-            // Forward для одного примера
             double[] z = biases.clone();
 
             for (int i = 0; i < inLength; i++) {
@@ -111,47 +129,113 @@ public class FullyConnectedLayer extends Layer {
                 }
             }
 
-            // Сохраняем для backprop
+            // Збереження a^(l-1) для backpropagation
             lastXBatch.add(input.clone());
             lastZBatch.add(z.clone());
 
-            // Применяем активацию
-            double[] a = new double[outLength];
-            for (int j = 0; j < outLength; j++) {
-                a[j] = activation.forward(z[j]);
-            }
+            double[] a = applyActivation(z);
             batchOutputs.add(a);
         }
 
         return batchOutputs;
     }
 
-    // ========== BATCH BACKPROPAGATION ==========
+    private void validateInput(double[] input) {
+        if (input.length != inLength) {
+            throw new IllegalArgumentException(
+                "Expected input length " + inLength + ", got " + input.length
+            );
+        }
+    }
 
+    /**
+     * Застосовує функцію активації f^(l) до кожного елемента вектора z^(l).
+     *
+     * @param z вектор z^(l) — зважена сума
+     * @return вектор a^(l) = f^(l)(z^(l)) — активації після застосування функції
+     */
+    private double[] applyActivation(double[] z) {
+        double[] a = new double[outLength];
+        for (int j = 0; j < outLength; j++) {
+            a[j] = activation.forward(z[j]);
+        }
+        return a;
+    }
+
+
+    /**
+     * Реалізує алгоритм зворотного поширення помилки (backpropagation) через повнозв'язний шар.
+     * Процес складається з чотирьох етапів: обчислення локальної похибки, обчислення градієнта
+     * для попереднього шару, оновлення ваг та оновлення зміщень.
+     *
+     * <p><b>Математичні позначення:</b>
+     * <ul>
+     *   <li>dLda = ∂L/∂a^(l) — градієнт втрат відносно виходу шару (вхідний параметр)</li>
+     *   <li>delta = δ^(l) — локальна похибка шару</li>
+     *   <li>dLdX = ∂L/∂a^(l-1) — градієнт втрат відносно входу шару</li>
+     *   <li>lastZ = z^(l) — зважена сума перед активацією (збережена з forward pass)</li>
+     *   <li>lastX = a^(l-1) — активації попереднього шару (збережені з forward pass)</li>
+     *   <li>weights = W^(l) — матриця ваг</li>
+     *   <li>biases = b^(l) — вектор зміщень</li>
+     * </ul>
+     *
+     * <p><b>ЕТАП 1: Обчислення локальної похибки</b>
+     * <pre>
+     *   δ^(l) = ∂L/∂a^(l) ⊙ f'(z^(l))
+     * </pre>
+     * де ⊙ — поелементне множення (Hadamard product), f' — похідна функції активації.
+     * <p>
+     *
+     * <p><b>ЕТАП 2: Обчислення градієнта для попереднього шару</b>
+     * <pre>
+     *   ∂L/∂a^(l-1) = (W^(l))^T · δ^(l)
+     * </pre>
+     * Цей градієнт передається попередньому шару для продовження backpropagation.
+     * <p>
+     *
+     * <p><b>ЕТАП 3: Обчислення градієнтів параметрів</b>
+     * <pre>
+     *   ∂L/∂W^(l)_ij = a^(l-1)_i · δ^(l)_j
+     *   ∂L/∂b^(l)_j = δ^(l)_j
+     * </pre>
+     * <p>
+     *
+     * <p><b>ЕТАП 4: Оновлення параметрів методом градієнтного спуску</b>
+     * <pre>
+     *   W^(l) := W^(l) - η · ∂L/∂W^(l)
+     *   b^(l) := b^(l) - η · ∂L/∂b^(l)
+     * </pre>
+     * де η — швидкість навчання (learning rate).
+     *
+     * <p><b>ВАЖЛИВО:</b> Градієнт dLdX обчислюється ДО оновлення ваг, використовуючи
+     * старі значення параметрів. Це критично для коректності backpropagation через весь ланцюг шарів.
+     *
+     * @param dLdaBatch градієнт функції втрат відносно виходу шару (∂L/∂a^(l))
+     */
     @Override
-    public void backPropagationBatch(List<double[]> dLdOBatch) {
-        int batchSize = dLdOBatch.size();
+    public void backPropagationBatch(List<double[]> dLdaBatch) {
+        int batchSize = dLdaBatch.size();
 
-        // Инициализация аккумуляторов градиентов
+        // Ініціалізація акумуляторів градієнтів
         double[][] weightsDeltaSum = new double[inLength][outLength];
         double[] biasesDeltaSum = new double[outLength];
 
-        List<double[]> dLdOPrevBatch = new ArrayList<>();
+        List<double[]> dLdaPrevBatch = new ArrayList<>();
 
-        // Обрабатываем каждый пример в батче
+        // Обробляємо кожен приклад у батчі
         for (int b = 0; b < batchSize; b++) {
-            double[] dLda = dLdOBatch.get(b);  // градиент выхода
-            double[] lastX = lastXBatch.get(b);  // вход
-            double[] lastZ = lastZBatch.get(b);  // z перед активацией
+            double[] dLda = dLdaBatch.get(b);  // градієнт виходу
+            double[] lastX = lastXBatch.get(b);  // вхід
+            double[] lastZ = lastZBatch.get(b);  // z перед активацією
 
-            // === ЭТАП 1: Вычисление локальной ошибки ===
+            // ЕТАП 1: Обчислення локальної похибки 
             // δ^(l) = ∂L/∂a^(l) ⊙ f'(z^(l))
             double[] delta = new double[outLength];
             for (int j = 0; j < outLength; j++) {
                 delta[j] = dLda[j] * activation.backward(lastZ[j]);
             }
 
-            // === ЭТАП 2: Вычисление градиента для предыдущего слоя ===
+            // ЕТАП 2: Обчислення градієнта для попереднього шару 
             // ∂L/∂a^(l-1) = (W^(l))^T · δ^(l)
             double[] dLdaPrev = new double[inLength];
             for (int i = 0; i < inLength; i++) {
@@ -163,7 +247,7 @@ public class FullyConnectedLayer extends Layer {
                 dLdaPrev[i] = sum;
             }
 
-            // === ЭТАП 3: Аккумуляция градиентов параметров ===
+            // ЕТАП 3: Акумуляція градієнтів параметрів 
             // ∂L/∂W^(l)_ij = a^(l-1)_i · δ^(l)_j
             for (int i = 0; i < inLength; i++) {
                 double aPrevI = lastX[i];
@@ -178,14 +262,14 @@ public class FullyConnectedLayer extends Layer {
                 biasesDeltaSum[j] += delta[j];
             }
 
-            dLdOPrevBatch.add(dLdaPrev);
+            dLdaPrevBatch.add(dLdaPrev);
         }
 
-        // === ЭТАП 4: Обновление параметров (усреднённые по батчу) ===
+        // ЕТАП 4: Оновлення параметрів (усереднені по батчу) 
         for (int i = 0; i < inLength; i++) {
             for (int j = 0; j < outLength; j++) {
                 double grad = weightsDeltaSum[i][j] / batchSize;
-                grad += l2Lambda * weights[i][j];  // L2 регуляризация
+                grad += l2Lambda * weights[i][j];  // L2 регуляризація
                 weights[i][j] -= learningRate * grad;
             }
         }
@@ -194,13 +278,11 @@ public class FullyConnectedLayer extends Layer {
             biases[j] -= learningRate * (biasesDeltaSum[j] / batchSize);
         }
 
-        // Передаём батч градиентов предыдущему слою
         if (previousLayer != null) {
-            previousLayer.backPropagationBatch(dLdOPrevBatch);
+            previousLayer.backPropagationBatch(dLdaPrevBatch);
         }
     }
 
-    // ========== WEIGHT INITIALIZATION ==========
 
     private void initWeightsHe() {
         double std = Math.sqrt(2.0 / inLength);
@@ -220,7 +302,6 @@ public class FullyConnectedLayer extends Layer {
         }
     }
 
-    // ========== METADATA ==========
 
     @Override
     public int getOutputLength() {
