@@ -22,18 +22,4 @@ public class MatrixUtility {
         }
     }
 
-    public static void multiply(double[][] a, double scalar) {
-        int length = a.length;
-        for (double[] row : a) {
-            for (int j = 0; j < length; j++) {
-                row[j] *= scalar;
-            }
-        }
-    }
-
-    public static void multiply(double[] a, double scalar) {
-        for (int i = 0; i < a.length; i++) {
-            a[i] *= scalar;
-        }
-    }
 }

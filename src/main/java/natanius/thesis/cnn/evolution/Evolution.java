@@ -1,6 +1,7 @@
 package natanius.thesis.cnn.evolution;
 
 import static java.lang.Math.floorDiv;
+import static java.lang.Runtime.getRuntime;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
 import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
@@ -10,6 +11,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.POPULATION_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
+import static natanius.thesis.cnn.evolution.data.ExcelLogger.saveCacheToExcel;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 import static natanius.thesis.cnn.evolution.genes.PopulationGenerator.generateInitialPopulation;
 
@@ -64,11 +66,15 @@ public class Evolution {
                 try {
                     POPULATION_SIZE = Integer.parseInt(args[1]);
                 } catch (NumberFormatException e) {
-                    System.err.println("Invalid POPULATION_SIZE: " + args[2]);
+                    System.err.println("Invalid POPULATION_SIZE: " + args[1]);
                     System.exit(1);
                 }
             }
         }
+
+        System.out.println("Dataset fraction: " + DATASET_FRACTION * 100 + "%; " +
+            "population size: " + POPULATION_SIZE + "; " +
+            "available processors: " + getRuntime().availableProcessors());
     }
 
     private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest) {
@@ -102,7 +108,7 @@ public class Evolution {
         List<Image> trainSet = imagesTrain.subList(imagesTrain.size() / 10, imagesTrain.size());
         for (int gen = 0; gen < GENERATIONS; gen++) {
             long start = now().getEpochSecond();
-            System.out.println("===================================== Generation " + (gen + 1) + " =====================================");
+            System.out.println("===================================== Generation " + (gen + 1) + "/" + GENERATIONS + " =====================================");
 
             population = GA.evolve(population, trainSet, validationSet);
 
@@ -114,6 +120,7 @@ public class Evolution {
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             trainAndSaveResults(imagesTest, best, trainSet, validationSet, start, gen);
         }
+        saveCacheToExcel();
     }
 
     private static void trainAndSaveResults(List<Image> imagesTest, Individual best, List<Image> trainSet, List<Image> validationSet, long start, int gen) {

@@ -2,6 +2,7 @@ package natanius.thesis.cnn.evolution.data;
 
 import static lombok.AccessLevel.PRIVATE;
 import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
+import static natanius.thesis.cnn.evolution.genes.GeneticAlgorithm.CACHE;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +10,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 import lombok.NoArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -19,6 +21,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public class ExcelLogger {
 
     private static final String FILE_PATH = "logs/training_results.xlsx";
+    private static final String CACHE_FILE_PATH = "logs/cache_results.xlsx";
 
     public static synchronized void saveResults(int generation,
                                                 float fitness,
@@ -83,6 +86,36 @@ public class ExcelLogger {
         };
         for (int i = 0; i < columns.length; i++) {
             header.createCell(i).setCellValue(columns[i]);
+        }
+    }
+
+    public static synchronized void saveCacheToExcel() {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Cache");
+
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Architecture");
+        header.createCell(1).setCellValue("Fitness");
+
+        int rowNum = 1;
+        for (Map.Entry<String, Float> entry : CACHE.entrySet()) {
+            Row row = sheet.createRow(rowNum++);
+            row.createCell(0).setCellValue(entry.getKey());
+            Float fitness = entry.getValue();
+            if (fitness != null) {
+                row.createCell(1).setCellValue(fitness);
+            }
+        }
+
+        sheet.autoSizeColumn(0);
+        sheet.autoSizeColumn(1);
+
+        try (FileOutputStream fos = new FileOutputStream(CACHE_FILE_PATH)) {
+            workbook.write(fos);
+            workbook.close();
+            System.out.println("Cache saved to " + CACHE_FILE_PATH);
+        } catch (IOException e) {
+            throw new RuntimeException("Error writing cache to Excel file", e);
         }
     }
 }

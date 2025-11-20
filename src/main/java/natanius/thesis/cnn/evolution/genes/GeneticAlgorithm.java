@@ -15,6 +15,7 @@ import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.crossover;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 public class GeneticAlgorithm {
 
     private final EpochTrainer epochTrainer = new EpochTrainer();
-    private static final HashMap<String, Float> CACHE = new HashMap<>();
+    public static final Map<String, Float> CACHE = new HashMap<>();
 
     public List<Individual> evolve(List<Individual> currentPopulation, List<Image> trainSet, List<Image> validationSet) {
         checkCache(currentPopulation);
