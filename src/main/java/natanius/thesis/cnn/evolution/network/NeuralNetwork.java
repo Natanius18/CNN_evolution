@@ -216,11 +216,10 @@ public class NeuralNetwork {
     /**
      * Навчання на одній епосі з mini-batch розбиттям
      *
-     * @param images        тренувальний набір
-     * @param batchSize     розмір батча
-     * @return середня loss за епоху
+     * @param images    тренувальний набір
+     * @param batchSize розмір батча
      */
-    public double trainEpoch(List<Image> images, int batchSize) {
+    public void trainEpoch(List<Image> images, int batchSize) {
         int numBatches = (images.size() + batchSize - 1) / batchSize;
         double totalLoss = 0.0;
 
@@ -229,7 +228,6 @@ public class NeuralNetwork {
             int end = Math.min(start + batchSize, images.size());
             List<Image> batch = images.subList(start, end);
 
-            // === FORWARD PASS ===
             List<List<double[][]>> batchInputs = new ArrayList<>();
             List<Integer> labels = new ArrayList<>();
 
@@ -243,7 +241,6 @@ public class NeuralNetwork {
             // Forward через всю мережу
             List<double[]> batchOutputs = layers.getFirst().getOutputBatch(batchInputs);
 
-            // === COMPUTE LOSS & GRADIENTS ===
             List<double[]> batchErrors = new ArrayList<>();
             double batchLoss = 0.0;
 
@@ -262,16 +259,10 @@ public class NeuralNetwork {
 
             totalLoss += batchLoss;
 
-            // === BACKPROPAGATION ===
             layers.getLast().backPropagationBatch(batchErrors);
         }
-
-        // Усредняем loss по всей эпохе
-        return totalLoss / images.size();
     }
 
-
-    // ========== NETWORK INFO ==========
 
     @Override
     public String toString() {

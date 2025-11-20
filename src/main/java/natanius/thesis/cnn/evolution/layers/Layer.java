@@ -10,38 +10,34 @@ public abstract class Layer {
     protected Layer nextLayer;
     protected Layer previousLayer;
 
-    // ========== BATCH INTERFACE ==========
-    // Теперь основные методы работают со списками (батчами)
 
     /**
-     * Forward pass для батча входов
-     * @param batchInput список входов для батча, где каждый элемент — List<double[][]> (каналы одного изображения)
-     * @return список выходов для батча (List<double[]> или что требует конкретный слой)
+     * Forward pass для батча входів
+     * @param batchInput список входів для батча, де кожен елемент — List<double[][]> (канали одного зображення)
+     * @return список виходів для батча (List<double[]> або що вимагає конкретний шар)
      */
     public abstract List<double[]> getOutputBatch(List<List<double[][]>> batchInput);
 
     /**
-     * Backpropagation для батча градиентов
-     * @param dLdOBatch список градиентов для батча
+     * Backpropagation для батча градієнтів
+     * @param dLdOBatch список градієнтів для батча
      */
     public abstract void backPropagationBatch(List<double[]> dLdOBatch);
 
-    // ========== METADATA ==========
     public abstract int getOutputLength();
     public abstract int getOutputRows();
     public abstract int getOutputCols();
     public abstract int getOutputElements();
     public abstract int getParameterCount();
 
-    // ========== UTILITY METHODS ==========
 
     /**
-     * Конвертирует список матриц (каналы) в вектор
+     * Конвертує список матриць (канали) у вектор
      */
     protected double[] matrixToVector(List<double[][]> input) {
         if (input.isEmpty()) return new double[0];
 
-        double[][] first = input.get(0);
+        double[][] first = input.getFirst();
         int rows = first.length;
         int cols = first[0].length;
         double[] vector = new double[input.size() * rows * cols];
@@ -57,7 +53,7 @@ public abstract class Layer {
     }
 
     /**
-     * Конвертирует вектор в список матриц (каналы)
+     * Конвертує вектор у список матриць (канали)
      */
     protected List<double[][]> vectorToMatrix(double[] input, int length, int rows, int cols) {
         List<double[][]> out = new ArrayList<>(length);
