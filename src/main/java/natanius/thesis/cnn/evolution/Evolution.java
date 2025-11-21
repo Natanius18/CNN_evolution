@@ -120,7 +120,6 @@ public class Evolution {
             System.out.println("\nBest fitness: " + best.getFitness() + " for " + best.getChromosome());
             trainAndSaveResults(imagesTest, best, trainSet, validationSet, start, gen);
         }
-        saveCacheToExcel();
     }
 
     private static void trainAndSaveResults(List<Image> imagesTest, Individual best, List<Image> trainSet, List<Image> validationSet, long start, int gen) {
@@ -146,6 +145,7 @@ public class Evolution {
             trainingTime,
             best.getChromosome().toString()
         );
+        saveCacheToExcel();
     }
 
 
