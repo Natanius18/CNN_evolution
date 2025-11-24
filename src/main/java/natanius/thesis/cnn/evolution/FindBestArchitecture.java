@@ -7,6 +7,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
+import static natanius.thesis.cnn.evolution.data.ExcelLogger.saveArchitectureTestResults;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 
 import java.util.ArrayList;
@@ -69,8 +70,10 @@ public class FindBestArchitecture {
             network.trainEpoch(imagesTrain, 32);
             float testAccuracy = network.test(imagesTest);
             float trainAccuracy = network.test(imagesTrain);
-            System.out.printf("%s%nEpoch %d: Train Accuracy = %.2f, Test Accuracy = %.2f%%%n", text, epoch, trainAccuracy, testAccuracy);
-            printTimeTaken(now().getEpochSecond() - start);
+            long trainingTime = now().getEpochSecond() - start;
+            System.out.printf("%s%nEpoch %d: Train Accuracy = %.5f, Test Accuracy = %.5f%%%n", text, epoch, trainAccuracy, testAccuracy);
+            printTimeTaken(trainingTime);
+            saveArchitectureTestResults(text, epoch, trainAccuracy, testAccuracy, trainingTime);
         }
 
     }
