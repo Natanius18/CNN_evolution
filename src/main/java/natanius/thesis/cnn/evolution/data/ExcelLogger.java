@@ -119,7 +119,7 @@ public class ExcelLogger {
         }
     }
 
-    public static synchronized void saveArchitectureTestResults(String architecture, int epoch, float trainAccuracy, float testAccuracy, long trainingTime) {
+    public static synchronized void saveArchitectureTestResults(String architecture, int epoch, double loss, float trainAccuracy, float testAccuracy, long trainingTime) {
         String filePath = "logs/architecture_test_results.xlsx";
         File file = new File(filePath);
         Workbook workbook;
@@ -131,9 +131,10 @@ public class ExcelLogger {
             Row header = sheet.createRow(0);
             header.createCell(0).setCellValue("Architecture");
             header.createCell(1).setCellValue("Epoch");
-            header.createCell(2).setCellValue("Train Accuracy");
-            header.createCell(3).setCellValue("Test Accuracy");
-            header.createCell(4).setCellValue("Training Time (s)");
+            header.createCell(2).setCellValue("Loss");
+            header.createCell(3).setCellValue("Train Accuracy");
+            header.createCell(4).setCellValue("Test Accuracy");
+            header.createCell(5).setCellValue("Training Time (s)");
         } else {
             try (FileInputStream fis = new FileInputStream(filePath)) {
                 workbook = new XSSFWorkbook(fis);
@@ -147,9 +148,10 @@ public class ExcelLogger {
         Row row = sheet.createRow(rowNum);
         row.createCell(0).setCellValue(architecture);
         row.createCell(1).setCellValue(epoch);
-        row.createCell(2).setCellValue(trainAccuracy);
-        row.createCell(3).setCellValue(testAccuracy);
-        row.createCell(4).setCellValue(trainingTime);
+        row.createCell(2).setCellValue(loss);
+        row.createCell(3).setCellValue(trainAccuracy);
+        row.createCell(4).setCellValue(testAccuracy);
+        row.createCell(5).setCellValue(trainingTime);
 
         for (int i = 0; i <= 4; i++) {
             sheet.autoSizeColumn(i);

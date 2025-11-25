@@ -218,8 +218,9 @@ public class NeuralNetwork {
      *
      * @param images    тренувальний набір
      * @param batchSize розмір батча
+     * @return
      */
-    public void trainEpoch(List<Image> images, int batchSize) {
+    public double trainEpoch(List<Image> images, int batchSize) {
         int numBatches = (images.size() + batchSize - 1) / batchSize;
         double totalLoss = 0.0;
 
@@ -261,6 +262,7 @@ public class NeuralNetwork {
 
             layers.getLast().backPropagationBatch(batchErrors);
         }
+        return totalLoss;
     }
 
 

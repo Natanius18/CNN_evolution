@@ -67,13 +67,13 @@ public class FindBestArchitecture {
         for (int epoch = 1; epoch <= 10; epoch++) {
             long start = now().getEpochSecond();
             shuffle(imagesTrain, RANDOM);
-            network.trainEpoch(imagesTrain, 32);
+            double loss = network.trainEpoch(imagesTrain, 32);
             float testAccuracy = network.test(imagesTest);
             float trainAccuracy = network.test(imagesTrain);
             long trainingTime = now().getEpochSecond() - start;
-            System.out.printf("%s%nEpoch %d: Train Accuracy = %.5f, Test Accuracy = %.5f%%%n", text, epoch, trainAccuracy, testAccuracy);
+            System.out.printf("%s%nEpoch %d: Loss = %.5f, Train Accuracy = %.5f, Test Accuracy = %.5f%%%n", text, epoch, loss, trainAccuracy, testAccuracy);
             printTimeTaken(trainingTime);
-            saveArchitectureTestResults(text, epoch, trainAccuracy, testAccuracy, trainingTime);
+            saveArchitectureTestResults(text, epoch, loss, trainAccuracy, testAccuracy, trainingTime);
         }
 
     }
