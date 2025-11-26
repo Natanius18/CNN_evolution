@@ -4,14 +4,13 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
+import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
-import static natanius.thesis.cnn.evolution.data.ExcelLogger.saveArchitectureTestResults;
 import static natanius.thesis.cnn.evolution.genes.GeneticFunctions.buildNetworkFromChromosome;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import natanius.thesis.cnn.evolution.activation.Activation;
 import natanius.thesis.cnn.evolution.data.Image;
@@ -20,51 +19,23 @@ import natanius.thesis.cnn.evolution.genes.LayerGene;
 import natanius.thesis.cnn.evolution.genes.LayerType;
 import natanius.thesis.cnn.evolution.network.NeuralNetwork;
 
-public class FindBestArchitecture {
+public class BestArchitectureDistr {
 
 
     public static void main(String[] args) {
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
+        imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
         System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
 
-        String[] chromosomes = {
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (8 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → CONVOLUTION (32 filters 7x7, stride=2, valid padding + ReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (8 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → FC output",
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → CONVOLUTION (32 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (16 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → CONVOLUTION (32 filters 7x7, stride=2, valid padding + ReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (16 filters 7x7, stride=1, same padding + LeakyReLU) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (64 filters 3x3, stride=1, valid padding + ReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output",
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → FC output",
-            "CONVOLUTION (16 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (64 filters 7x7, stride=2, same padding + ReLU) → FC output",
-            "CONVOLUTION (16 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (4 filters 5x5, stride=1, same padding + ReLU) → MAX_POOL (2x2, stride=1) → CONVOLUTION (32 filters 7x7, stride=2, valid padding + ReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (64 filters 3x3, stride=1, same padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → CONVOLUTION (64 filters 5x5, stride=1, same padding + ReLU) → FC output",
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → MAX_POOL (2x2, stride=1) → CONVOLUTION (32 filters 7x7, stride=2, valid padding + ReLU) → MAX_POOL (2x2, stride=1) → FC output",
-            "CONVOLUTION (8 filters 7x7, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (32 filters 5x5, stride=1, valid padding + LeakyReLU) → CONVOLUTION (64 filters 3x3, stride=1, valid padding + LeakyReLU) → MAX_POOL (3x3, stride=2) → FC output",
-            "CONVOLUTION (16 filters 3x3, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output"
-        };
-
-        Arrays.stream(chromosomes)
-            .parallel()
-            .forEach(text -> testOneNetwork(imagesTrain, imagesTest, text));
-    }
-
-
-    private static void testOneNetwork(List<Image> imagesTrain, List<Image> imagesTest, String text) {
+        String text = "CONVOLUTION (64 filters 7x7, stride=2, same padding + ReLU) → FC output";
 
         Chromosome chromosome = parseChromosomeString(text);
         NeuralNetwork network = buildNetworkFromChromosome(chromosome);
 
         System.out.println(network);
 
-        for (int epoch = 1; epoch <= 10; epoch++) {
+        for (int epoch = 1; epoch <= 3; epoch++) {
             long start = now().getEpochSecond();
             shuffle(imagesTrain, RANDOM);
             double loss = network.trainEpoch(imagesTrain, 32);
@@ -73,10 +44,10 @@ public class FindBestArchitecture {
             long trainingTime = now().getEpochSecond() - start;
             System.out.printf("%s%nEpoch %d: Loss = %.5f, Train Accuracy = %.5f, Test Accuracy = %.5f%%%n", text, epoch, loss, trainAccuracy, testAccuracy);
             printTimeTaken(trainingTime);
-            saveArchitectureTestResults(text, epoch, loss, trainAccuracy, testAccuracy, trainingTime);
         }
-
+        analyzeClassDistribution(network, imagesTest);
     }
+
 
     public static Chromosome parseChromosomeString(String str) {
         List<LayerGene> genes = new ArrayList<>();
@@ -154,6 +125,36 @@ public class FindBestArchitecture {
             }
         }
         throw new IllegalArgumentException("Unknown activation: " + name);
+    }
+
+    /**
+     * Анализирует распределение угадываний модели по классам
+     *
+     * @param network обученная нейросеть
+     * @param images  тестовый набор данных
+     */
+    public static void analyzeClassDistribution(NeuralNetwork network, List<Image> images) {
+        int[][] distribution = new int[10][2]; // [класс][угаданные, всего]
+        
+        for (Image img : images) {
+            int label = img.label();
+            int prediction = network.guess(img);
+            
+            distribution[label][1]++; // всего картинок этого класса
+            if (prediction == label) {
+                distribution[label][0]++; // угаданные
+            }
+        }
+        
+        // Вывод результатов
+        System.out.println("\n=== Class Distribution ===");
+        for (int i = 0; i < 10; i++) {
+            int correct = distribution[i][0];
+            int total = distribution[i][1];
+            float accuracy = total > 0 ? (float) correct / total * 100 : 0;
+            System.out.printf("Class %d: %d/%d (%.2f%%)%n", i, correct, total, accuracy);
+        }
+
     }
 
     private static void printTimeTaken(long totalSeconds) {

@@ -1,7 +1,16 @@
+Dataset fraction: 1.0%; population size: 40; available processors: 8
 Loading train data...
 Loading test data...
-Sizes: 6000 1000
-===================================== Generation 1 =====================================
-Invalid chromosome CONVOLUTION (64 filters 3x3, stride=2, valid padding + ReLU) → MAX_POOL (2x2, stride=2) → CONVOLUTION (64 filters 5x5, stride=1, same padding + Sigmoid) → CONVOLUTION (64 filters 7x7, stride=1, same padding + ReLU) → FC(64,Sigmoid) → FC output → regenerating
-Invalid chromosome CONVOLUTION (64 filters 7x7, stride=2, valid padding + ReLU) → MAX_POOL (3x3, stride=2) → CONVOLUTION (64 filters 7x7, stride=2, same padding + LeakyReLU) → FC(512,LeakyReLU) → FC(512,Sigmoid) → FC output → regenerating
-Time for one: 2:2 [1/40], thread 7: Individual: {CONVOLUTION (8 filters 7x7, stride=2, valid padding + LeakyReLU) → FC output, Fitness: 11.5}
+Sizes: 600 100
+
+╔════════════════════════════════════════════════════════════════════════════════════╗
+║                         🧠 NEURAL NETWORK ARCHITECTURE 🧠                         ║
+╠════════════════════════════════════════════════════════════════════════════════════╣
+║ 🌀 CONVOLUTION | 8 filters | 3x3 kernel | Stride: 1 | Padding: 0 | Parameters: 80  ║
+║                                        ▼                                           ║
+║        🔄 MAX POOL | Window: 2x2 | Stride: 1 | Input: 26x26 | Output: 25x25        ║
+║                                        ▼                                           ║
+║        🔗 FULLY CONNECTED | Inputs: 5000 → Outputs: 10 | Parameters: 50010         ║
+╚════════════════════════════════════════════════════════════════════════════════════╝
+📊 Total Layers: 3 | Total Parameters: 50090
+
