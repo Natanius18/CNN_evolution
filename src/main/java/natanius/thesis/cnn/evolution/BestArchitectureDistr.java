@@ -4,7 +4,6 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
-import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
@@ -25,17 +24,16 @@ public class BestArchitectureDistr {
     public static void main(String[] args) {
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
-        imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
         System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
 
-        String text = "CONVOLUTION (64 filters 7x7, stride=2, same padding + ReLU) → FC output";
+        String text = "CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output";
 
         Chromosome chromosome = parseChromosomeString(text);
         NeuralNetwork network = buildNetworkFromChromosome(chromosome);
 
         System.out.println(network);
 
-        for (int epoch = 1; epoch <= 3; epoch++) {
+        for (int epoch = 1; epoch <= 5; epoch++) {
             long start = now().getEpochSecond();
             shuffle(imagesTrain, RANDOM);
             double loss = network.trainEpoch(imagesTrain, 32);
@@ -44,8 +42,8 @@ public class BestArchitectureDistr {
             long trainingTime = now().getEpochSecond() - start;
             System.out.printf("%s%nEpoch %d: Loss = %.5f, Train Accuracy = %.5f, Test Accuracy = %.5f%%%n", text, epoch, loss, trainAccuracy, testAccuracy);
             printTimeTaken(trainingTime);
+            analyzeClassDistribution(network, imagesTest);
         }
-        analyzeClassDistribution(network, imagesTest);
     }
 
 

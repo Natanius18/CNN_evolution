@@ -1,16 +1,69 @@
-Dataset fraction: 1.0%; population size: 40; available processors: 8
 Loading train data...
 Loading test data...
-Sizes: 600 100
+Sizes: 60000 10000
 
-╔════════════════════════════════════════════════════════════════════════════════════╗
-║                         🧠 NEURAL NETWORK ARCHITECTURE 🧠                         ║
-╠════════════════════════════════════════════════════════════════════════════════════╣
-║ 🌀 CONVOLUTION | 8 filters | 3x3 kernel | Stride: 1 | Padding: 0 | Parameters: 80  ║
-║                                        ▼                                           ║
-║        🔄 MAX POOL | Window: 2x2 | Stride: 1 | Input: 26x26 | Output: 25x25        ║
-║                                        ▼                                           ║
-║        🔗 FULLY CONNECTED | Inputs: 5000 → Outputs: 10 | Parameters: 50010         ║
-╚════════════════════════════════════════════════════════════════════════════════════╝
-📊 Total Layers: 3 | Total Parameters: 50090
+╔═══════════════════════════════════════════════════════════════════════════════════════╗
+║                           🧠 NEURAL NETWORK ARCHITECTURE 🧠                           ║
+╠═══════════════════════════════════════════════════════════════════════════════════════╣
+║ 🌀 CONVOLUTION | 64 filters | 5x5 kernel | Stride: 1 | Padding: 2 | Parameters: 1664  ║
+║                                          ▼                                            ║
+║         🔄 MAX POOL | Window: 3x3 | Stride: 1 | Input: 28x28 | Output: 26x26          ║
+║                                          ▼                                            ║
+║         🔗 FULLY CONNECTED | Inputs: 43264 → Outputs: 10 | Parameters: 432650         ║
+╚═══════════════════════════════════════════════════════════════════════════════════════╝
+📊 Total Layers: 3 | Total Parameters: 434314
 
+CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output
+Epoch 1: Loss = 14616,87366, Train Accuracy = 0,97343, Test Accuracy = 0,97480%
+Time: 60:54
+
+Epoch 2: Loss = 5877,86611, Train Accuracy = 0,97827, Test Accuracy = 0,97710%
+Time: 31:8
+
+Epoch 3: Loss = 5697,37145, Train Accuracy = 0,97908, Test Accuracy = 0,97860%
+Time: 42:29
+
+
+=== Class Distribution ===
+Class 0: 975/980 (99,49%)
+Class 1: 1128/1135 (99,38%)
+Class 2: 997/1032 (96,61%)
+Class 3: 986/1010 (97,62%)
+Class 4: 963/982 (98,07%)
+Class 5: 876/892 (98,21%)
+Class 6: 935/958 (97,60%)
+Class 7: 1003/1028 (97,57%)
+Class 8: 955/974 (98,05%)
+Class 9: 968/1009 (95,94%)
+CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output
+Epoch 4: Loss = 6056,60730, Train Accuracy = 0,97803, Test Accuracy = 0,97570%
+Time: 69:57
+
+
+=== Class Distribution ===
+Class 0: 971/980 (99,08%)
+Class 1: 1126/1135 (99,21%)
+Class 2: 1009/1032 (97,77%)
+Class 3: 997/1010 (98,71%)
+Class 4: 963/982 (98,07%)
+Class 5: 875/892 (98,09%)
+Class 6: 938/958 (97,91%)
+Class 7: 988/1028 (96,11%)
+Class 8: 936/974 (96,10%)
+Class 9: 954/1009 (94,55%)
+CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output
+Epoch 5: Loss = 6632,68209, Train Accuracy = 0,97582, Test Accuracy = 0,97470%
+Time: 67:21
+
+
+=== Class Distribution ===
+Class 0: 970/980 (98,98%)
+Class 1: 1123/1135 (98,94%)
+Class 2: 995/1032 (96,41%)
+Class 3: 990/1010 (98,02%)
+Class 4: 962/982 (97,96%)
+Class 5: 874/892 (97,98%)
+Class 6: 941/958 (98,23%)
+Class 7: 994/1028 (96,69%)
+Class 8: 942/974 (96,71%)
+Class 9: 956/1009 (94,75%)

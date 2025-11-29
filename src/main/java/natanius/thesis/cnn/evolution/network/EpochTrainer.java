@@ -5,6 +5,7 @@ import static natanius.thesis.cnn.evolution.data.Constants.BATCH_SIZE;
 import static natanius.thesis.cnn.evolution.data.Constants.EPOCHS;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import natanius.thesis.cnn.evolution.data.Image;
@@ -22,11 +23,12 @@ public class EpochTrainer {
      */
     public float train(NeuralNetwork neuralNetwork, List<Image> trainSet, List<Image> validationSet) {
         float accuracy = 0;
+        List<Image> localTrainSet = new ArrayList<>(trainSet);
 
         for (int epoch = 1; epoch <= EPOCHS; epoch++) {
-            shuffle(trainSet, RANDOM);
+            shuffle(localTrainSet, RANDOM);
 
-            neuralNetwork.trainEpoch(trainSet, BATCH_SIZE);
+            neuralNetwork.trainEpoch(localTrainSet, BATCH_SIZE);
 
             accuracy = neuralNetwork.testBatch(validationSet, BATCH_SIZE);
         }
