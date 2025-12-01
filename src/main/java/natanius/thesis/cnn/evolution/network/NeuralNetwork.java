@@ -1,5 +1,7 @@
 package natanius.thesis.cnn.evolution.network;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
@@ -187,6 +189,25 @@ public class NeuralNetwork {
         }
 
         return ((float) correct / size);
+    }
+
+    /**
+     * Test and log predictions for confusion matrix
+     */
+    public float testAndLog(List<Image> images, String logFile) {
+        int correct = 0;
+        try (FileWriter writer = new FileWriter(logFile)) {
+            writer.write("Actual,Predicted\n");
+            for (Image img : images) {
+                int actual = img.label();
+                int predicted = guess(img);
+                writer.write(actual + "," + predicted + "\n");
+                if (predicted == actual) correct++;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ((float) correct / images.size());
     }
 
     /**
