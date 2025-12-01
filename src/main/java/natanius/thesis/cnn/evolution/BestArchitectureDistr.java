@@ -4,7 +4,6 @@ import static java.lang.Math.floorDiv;
 import static java.time.Instant.now;
 import static java.util.Collections.shuffle;
 import static natanius.thesis.cnn.evolution.data.Constants.ACTIVATION_STRATEGIES;
-import static natanius.thesis.cnn.evolution.data.Constants.DATASET_FRACTION;
 import static natanius.thesis.cnn.evolution.data.Constants.RANDOM;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTestData;
 import static natanius.thesis.cnn.evolution.data.DataReader.loadTrainData;
@@ -25,8 +24,6 @@ public class BestArchitectureDistr {
     public static void main(String[] args) {
         List<Image> imagesTrain = loadTrainData();
         List<Image> imagesTest = loadTestData();
-        imagesTrain = imagesTrain.subList(0, (int) (imagesTrain.size() * DATASET_FRACTION));
-        imagesTest = imagesTest.subList(0, (int) (imagesTest.size() * DATASET_FRACTION));
         System.out.println("Sizes: " + imagesTrain.size() + " " + imagesTest.size());
 
         String text = "CONVOLUTION (64 filters 5x5, stride=1, same padding + LeakyReLU) → MAX_POOL (3x3, stride=1) → FC output";
