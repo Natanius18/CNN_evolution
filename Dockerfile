@@ -26,4 +26,4 @@ COPY logs ./logs
 # Створення точки монтування для логів
 VOLUME /app/logs
 # Команда запуску головного класу при старті контейнера
-ENTRYPOINT ["java", "-cp", "app.jar", "natanius.thesis.cnn.evolution.FindBestArchitecture"]
+ENTRYPOINT ["java", "-cp", "app.jar", "natanius.thesis.cnn.evolution.Evolution"]
